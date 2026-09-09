@@ -6,7 +6,7 @@
 
 <div class="status-box">
   <div><strong>Reference asset:</strong> Burning Pons (<code>$BURNTEST</code>)</div>
-</div>
+  <div><strong>Testing Contract:</strong> <code>0xb16a0334d3506ae3b4daedd8aee77b65f127b49a</code></div>
 
 ## 1. Overview
 
