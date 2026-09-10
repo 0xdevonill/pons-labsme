@@ -43,6 +43,8 @@ The first asset used throughout this implementation is:
 `$PONSTAKE` is used exclusively as the reference testing token for the current development phase.
 
 The architecture is intentionally designed so that the staking engine can later be extended beyond the test asset and made available across **all eligible token pairs launched through Pons**.
+
+
                          PONS ECOSYSTEM
                                │
                                ▼
