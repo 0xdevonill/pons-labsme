@@ -7,6 +7,8 @@
 <div class="status-box">
   <div><strong>Reference asset:</strong> Burning Pons (<code>$BURNTEST</code>)</div>
   <div><strong>Testing Contract:</strong> <code>0xb16a0334d3506ae3b4daedd8aee77b65f127b49a</code></div>
+  <div><strong>Disclaimer:</strong> This testing token is still under development and is not intended to be bought.</div>
+</div>
 
 ## 1. Overview
 
