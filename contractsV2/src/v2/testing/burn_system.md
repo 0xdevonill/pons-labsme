@@ -214,10 +214,10 @@ It is an on-chain contract whose behavior defines the burn mechanism.
 
 ## 7. Burn Wallet Address
 
-The prototype uses the following fixed burn wallet contract:
+The prototype uses the following fixed burn wallet and contract:
 
 ```text
-0xDEAD83a9C5bCBaECe8300BEC83E85f25B2d0273F
+0xDEAD83a9C5bCBaECe8300BEC83E85f25B2d0273F / 0x00000000cf1cd5867be5d90b99a6ebd683bc031c
 ```
 
 It is represented in the implementation as:
@@ -225,6 +225,11 @@ It is represented in the implementation as:
 ```solidity
 address public constant BURN_WALLET =
     0xDEAD83a9C5bCBaECe8300BEC83E85f25B2d0273F;
+```
+
+```solidity
+address public constant CONTRACT =
+    0x00000000cf1cd5867be5d90b99a6ebd683bc031c;
 ```
 
 The address is intentionally fixed.
