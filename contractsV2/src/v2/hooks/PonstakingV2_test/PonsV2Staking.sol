@@ -9,27 +9,25 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 
 /**
- * @title PonsV2Staking
- * @notice Standalone experimental staking module for Pons V2.
+ * @title PonsV2StakingBETA
  *
- * @dev
- * Users stake Pons tokens and earn Pons-denominated rewards over time.
+ * @notice
+ * Standalone experimental beta staking module for Pons V2.
  *
- * The reward pool is expected to be funded by the Ponstaking tax mechanism.
- * For the standalone testing implementation, the owner/reward distributor
- * can fund the contract through `notifyRewardAmount()`.
+ * IMPORTANT:
+ * This beta deployment is intentionally DISABLED.
  *
- * Reward accounting follows a per-token accumulator model:
+ * No public user can stake, withdraw, claim rewards, compound,
+ * exit or perform any other state-changing staking operation.
  *
- *     rewardPerTokenStored
+ * Only the deployer/owner can interact with administrative functions.
  *
- * This allows rewards to accrue continuously and proportionally to each
- * user's stake and the time their capital remains in the pool.
+ * The staking engine is therefore deployed as a dormant beta
+ * contract for development, verification and future testing.
  *
- * This contract is intentionally standalone and does not modify the
- * production Pons V2 contracts.
+ * This contract does not modify the production Pons V2 contracts.
  */
-contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
+contract PonsV2StakingBETA is Ownable2Step, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
 
     // -------------------------------------------------------------------------
@@ -39,42 +37,34 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
     uint256 public constant PRECISION = 1e18;
     uint256 public constant YEAR = 365 days;
 
-    /**
-     * @dev Default reward duration used by the testing deployment.
-     *
-     * A shorter duration makes reward funding cycles easy to test.
-     */
     uint256 public constant DEFAULT_REWARD_DURATION = 30 days;
-
-    /**
-     * @dev Maximum reward duration accepted by the contract.
-     *
-     * Prevents accidental extremely long emissions.
-     */
     uint256 public constant MAX_REWARD_DURATION = 365 days;
+    uint256 public constant MAX_REWARD_RATE = 1e24;
 
     /**
-     * @dev Testing safety limit for the instantaneous reward rate.
+     * @notice
+     * Global staking switch.
      *
-     * This is deliberately generous because this implementation is
-     * intended for protocol testing.
+     * This beta deployment starts disabled.
+     *
+     * It is intentionally immutable so that staking cannot accidentally
+     * be enabled on this beta contract after deployment.
      */
-    uint256 public constant MAX_REWARD_RATE = 1e24;
+    bool public constant stakingEnabled = false;
 
     // -------------------------------------------------------------------------
     // Immutable configuration
     // -------------------------------------------------------------------------
 
     /**
-     * @notice Token users stake and receive as rewards.
+     * @notice Token used for staking and rewards.
      */
     IERC20 public immutable stakingToken;
 
     /**
-     * @notice Address allowed to fund the reward pool.
+     * @notice Address allowed to fund reward emissions.
      *
-     * In production this can be replaced by a dedicated tax collector,
-     * fee escrow, or protocol rewards controller.
+     * On the beta deployment this is the deployer.
      */
     address public rewardDistributor;
 
@@ -82,41 +72,14 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
     // Global staking state
     // -------------------------------------------------------------------------
 
-    /**
-     * @notice Total amount currently staked.
-     */
     uint256 public totalStaked;
-
-    /**
-     * @notice Total rewards distributed through user claims.
-     */
     uint256 public totalRewardsPaid;
-
-    /**
-     * @notice Total rewards ever funded into the contract.
-     */
     uint256 public totalRewardsFunded;
 
-    /**
-     * @notice Current reward emission rate, denominated in tokens/second.
-     */
     uint256 public rewardRate;
-
-    /**
-     * @notice Timestamp at which the current reward period ends.
-     */
     uint256 public periodFinish;
-
-    /**
-     * @notice Last timestamp included in global reward accounting.
-     */
     uint256 public lastUpdateTime;
 
-    /**
-     * @notice Accumulated rewards per staked token.
-     *
-     * Scaled by PRECISION.
-     */
     uint256 public rewardPerTokenStored;
 
     // -------------------------------------------------------------------------
@@ -173,33 +136,38 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
     // -------------------------------------------------------------------------
 
     /**
-     * @param _stakingToken Pons token used for staking and rewards.
-     * @param _rewardDistributor Initial address allowed to fund rewards.
-     * @param _initialOwner Initial Ownable owner.
+     * @notice
+     * Deploys PonsV2StakingBETA.
+     *
+     * The deployer automatically becomes the owner.
+     *
+     * No external address can be assigned ownership during deployment.
+     *
+     * @param _stakingToken Pons token used for the beta staking system.
      */
     constructor(
-        address _stakingToken,
-        address _rewardDistributor,
-        address _initialOwner
-    ) Ownable(_initialOwner) {
+        address _stakingToken
+    )
+        Ownable(msg.sender)
+    {
         require(
             _stakingToken != address(0),
-            "Staking: zero token"
-        );
-
-        require(
-            _rewardDistributor != address(0),
-            "Staking: zero distributor"
+            "PonsV2StakingBETA: zero token"
         );
 
         stakingToken = IERC20(_stakingToken);
-        rewardDistributor = _rewardDistributor;
+
+        // The deployer is the only reward distributor.
+        rewardDistributor = msg.sender;
     }
 
     // -------------------------------------------------------------------------
     // Modifiers
     // -------------------------------------------------------------------------
 
+    /**
+     * @dev Updates global and user reward accounting.
+     */
     modifier updateReward(address account) {
         rewardPerTokenStored = rewardPerToken();
 
@@ -213,10 +181,24 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
         _;
     }
 
-    modifier onlyRewardDistributor() {
+    /**
+     * @dev Only the deployer/owner can perform administrative operations.
+     */
+    modifier onlyDeployer() {
         require(
-            msg.sender == rewardDistributor || msg.sender == owner(),
-            "Staking: unauthorized distributor"
+            msg.sender == owner(),
+            "PonsV2StakingBETA: deployer only"
+        );
+        _;
+    }
+
+    /**
+     * @dev Explicitly blocks every public staking operation.
+     */
+    modifier stakingDisabled() {
+        require(
+            stakingEnabled,
+            "PonsV2StakingBETA: staking disabled"
         );
         _;
     }
@@ -226,57 +208,44 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
     // -------------------------------------------------------------------------
 
     /**
-     * @notice Stake Pons tokens.
-     * @param amount Amount of Pons to stake.
+     * @notice
+     * Stake Pons tokens.
+     *
+     * DISABLED in PonsV2StakingBETA.
      */
     function stake(
-        uint256 amount
+        uint256
     )
         external
-        nonReentrant
-        whenNotPaused
-        updateReward(msg.sender)
+        pure
     {
-        require(
-            amount > 0,
-            "Staking: zero amount"
-        );
-
-        totalStaked += amount;
-        balanceOf[msg.sender] += amount;
-
-        stakingToken.safeTransferFrom(
-            msg.sender,
-            address(this),
-            amount
-        );
-
-        emit Staked(
-            msg.sender,
-            amount,
-            totalStaked
-        );
+        revert("PonsV2StakingBETA: staking disabled");
     }
 
     /**
-     * @notice Withdraw staked Pons.
-     * @param amount Amount to withdraw.
+     * @notice
+     * Withdraw staked Pons.
+     *
+     * DISABLED for public users.
+     *
+     * Only the deployer can call this function on the beta contract.
      */
     function withdraw(
         uint256 amount
     )
         public
         nonReentrant
+        onlyDeployer
         updateReward(msg.sender)
     {
         require(
             amount > 0,
-            "Staking: zero amount"
+            "PonsV2StakingBETA: zero amount"
         );
 
         require(
             balanceOf[msg.sender] >= amount,
-            "Staking: insufficient stake"
+            "PonsV2StakingBETA: insufficient stake"
         );
 
         balanceOf[msg.sender] -= amount;
@@ -295,18 +264,23 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @notice Claim accumulated staking rewards.
+     * @notice
+     * Claim accumulated staking rewards.
+     *
+     * DISABLED for public users.
      */
     function getReward()
         public
         nonReentrant
+        onlyDeployer
         updateReward(msg.sender)
     {
         uint256 reward = rewards[msg.sender];
 
-        if (reward == 0) {
-            return;
-        }
+        require(
+            reward > 0,
+            "PonsV2StakingBETA: no rewards"
+        );
 
         rewards[msg.sender] = 0;
         totalRewardsPaid += reward;
@@ -323,11 +297,15 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @notice Withdraw the stake and claim all rewards.
+     * @notice
+     * Withdraw stake and claim rewards.
+     *
+     * Only the deployer can call this beta function.
      */
     function exit()
         external
         nonReentrant
+        onlyDeployer
         updateReward(msg.sender)
     {
         uint256 staked = balanceOf[msg.sender];
@@ -335,7 +313,7 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
 
         require(
             staked > 0 || reward > 0,
-            "Staking: nothing to exit"
+            "PonsV2StakingBETA: nothing to exit"
         );
 
         if (staked > 0) {
@@ -379,35 +357,16 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @notice Compound accumulated rewards back into the staking position.
+     * @notice
+     * Compound accumulated rewards.
      *
-     * @dev
-     * Since rewards and staking assets are the same token, compounding
-     * requires no external approval and simply increases the user's stake.
+     * DISABLED in the beta deployment.
      */
     function compound()
         external
-        nonReentrant
-        whenNotPaused
-        updateReward(msg.sender)
+        pure
     {
-        uint256 reward = rewards[msg.sender];
-
-        require(
-            reward > 0,
-            "Staking: no rewards"
-        );
-
-        rewards[msg.sender] = 0;
-
-        balanceOf[msg.sender] += reward;
-        totalStaked += reward;
-
-        emit Staked(
-            msg.sender,
-            reward,
-            totalStaked
-        );
+        revert("PonsV2StakingBETA: staking disabled");
     }
 
     // -------------------------------------------------------------------------
@@ -473,33 +432,30 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
             + rewards[account];
     }
 
+    // -------------------------------------------------------------------------
+    // Reward funding
+    // -------------------------------------------------------------------------
+
     /**
-     * @notice Fund and start a new reward emission period.
-     *
-     * @dev
-     * The caller must approve the staking contract for `amount`.
-     *
-     * If a previous reward period is still active, its undistributed
-     * rewards are carried into the new emission period.
+     * @notice
+     * Internal reward funding implementation.
      */
-    function notifyRewardAmount(
+    function _notifyRewardAmount(
         uint256 amount,
         uint256 duration
     )
-        external
-        nonReentrant
-        onlyRewardDistributor
+        internal
         updateReward(address(0))
     {
         require(
             amount > 0,
-            "Staking: zero reward"
+            "PonsV2StakingBETA: zero reward"
         );
 
         require(
             duration > 0 &&
             duration <= MAX_REWARD_DURATION,
-            "Staking: invalid duration"
+            "PonsV2StakingBETA: invalid duration"
         );
 
         uint256 leftover;
@@ -518,12 +474,12 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
 
         require(
             newRewardRate > 0,
-            "Staking: rate too low"
+            "PonsV2StakingBETA: rate too low"
         );
 
         require(
             newRewardRate <= MAX_REWARD_RATE,
-            "Staking: rate too high"
+            "PonsV2StakingBETA: rate too high"
         );
 
         stakingToken.safeTransferFrom(
@@ -547,14 +503,42 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @notice Convenience function using the default 30-day reward period.
+     * @notice
+     * Fund a reward period.
+     *
+     * ONLY THE DEPLOYER CAN CALL THIS FUNCTION.
+     *
+     * NOTE:
+     * Staking itself remains disabled.
+     */
+    function notifyRewardAmount(
+        uint256 amount,
+        uint256 duration
+    )
+        external
+        nonReentrant
+        onlyDeployer
+    {
+        _notifyRewardAmount(
+            amount,
+            duration
+        );
+    }
+
+    /**
+     * @notice
+     * Convenience function using the default 30-day duration.
+     *
+     * ONLY THE DEPLOYER CAN CALL THIS FUNCTION.
      */
     function notifyRewardAmount(
         uint256 amount
     )
         external
+        nonReentrant
+        onlyDeployer
     {
-        notifyRewardAmount(
+        _notifyRewardAmount(
             amount,
             DEFAULT_REWARD_DURATION
         );
@@ -565,14 +549,9 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
     // -------------------------------------------------------------------------
 
     /**
-     * @notice Estimated annualized APY for the current pool state.
+     * @notice Estimated annualized APY.
      *
-     * @dev
-     * This is an instantaneous estimate based on:
-     *
-     *     rewardRate × 365 days / totalStaked
-     *
-     * It is NOT a guaranteed future yield.
+     * This is only an informational value.
      */
     function estimatedAPY()
         external
@@ -591,7 +570,7 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @notice Returns a user's stake and accrued reward in one call.
+     * @notice Returns a user's stake and accrued reward.
      */
     function position(
         address account
@@ -610,19 +589,20 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @notice Returns the amount of reward tokens currently held by
-     * the contract.
+     * @notice Returns the amount of staking tokens held by the contract.
      */
     function rewardBalance()
         external
         view
         returns (uint256)
     {
-        return stakingToken.balanceOf(address(this));
+        return stakingToken.balanceOf(
+            address(this)
+        );
     }
 
     /**
-     * @notice Returns the currently committed undistributed reward amount.
+     * @notice Returns currently committed undistributed rewards.
      */
     function remainingRewardAllocation()
         public
@@ -639,7 +619,7 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @notice Returns whether the reward period is currently active.
+     * @notice Returns whether the reward period is active.
      */
     function rewardPeriodActive()
         external
@@ -652,7 +632,7 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @notice Returns the token address and current staking configuration.
+     * @notice Returns current beta configuration.
      */
     function configuration()
         external
@@ -662,7 +642,8 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
             address distributor,
             uint256 currentRewardRate,
             uint256 currentPeriodFinish,
-            uint256 currentTotalStaked
+            uint256 currentTotalStaked,
+            bool currentStakingEnabled
         )
     {
         token = address(stakingToken);
@@ -670,6 +651,7 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
         currentRewardRate = rewardRate;
         currentPeriodFinish = periodFinish;
         currentTotalStaked = totalStaked;
+        currentStakingEnabled = stakingEnabled;
     }
 
     // -------------------------------------------------------------------------
@@ -677,22 +659,27 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
     // -------------------------------------------------------------------------
 
     /**
-     * @notice Update the address allowed to fund reward emissions.
+     * @notice
+     * Update reward distributor.
+     *
+     * ONLY THE DEPLOYER CAN CALL THIS FUNCTION.
      */
     function setRewardDistributor(
         address newDistributor
     )
         external
-        onlyOwner
+        onlyDeployer
     {
         require(
             newDistributor != address(0),
-            "Staking: zero distributor"
+            "PonsV2StakingBETA: zero distributor"
         );
 
-        address previous = rewardDistributor;
+        address previous =
+            rewardDistributor;
 
-        rewardDistributor = newDistributor;
+        rewardDistributor =
+            newDistributor;
 
         emit RewardDistributorUpdated(
             previous,
@@ -701,44 +688,49 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @notice Pause new staking and reward compounding.
+     * @notice
+     * Pause the beta contract.
      *
-     * Withdrawals and reward claims remain available.
+     * ONLY THE DEPLOYER CAN CALL THIS FUNCTION.
      */
     function pause()
         external
-        onlyOwner
+        onlyDeployer
     {
         _pause();
     }
 
     /**
-     * @notice Resume normal staking operations.
+     * @notice
+     * Unpause the beta contract.
+     *
+     * ONLY THE DEPLOYER CAN CALL THIS FUNCTION.
      */
     function unpause()
         external
-        onlyOwner
+        onlyDeployer
     {
         _unpause();
     }
 
     /**
-     * @notice Recover unrelated ERC20 tokens accidentally sent here.
+     * @notice
+     * Recover unrelated ERC20 tokens.
      *
-     * @dev
-     * The staking token itself can never be recovered through this function.
-     * This protects both user deposits and funded rewards.
+     * ONLY THE DEPLOYER CAN CALL THIS FUNCTION.
+     *
+     * The staking token itself cannot be recovered.
      */
     function recoverERC20(
         address token,
         uint256 amount
     )
         external
-        onlyOwner
+        onlyDeployer
     {
         require(
             token != address(stakingToken),
-            "Staking: cannot recover staking token"
+            "PonsV2StakingBETA: cannot recover staking token"
         );
 
         IERC20(token).safeTransfer(
@@ -758,27 +750,31 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
     // -------------------------------------------------------------------------
 
     /**
-     * @notice Emergency withdrawal without claiming rewards.
+     * @notice
+     * Emergency withdrawal.
      *
-     * @dev
-     * This function intentionally does not update or distribute rewards.
-     * The user's pending rewards remain forfeited.
+     * ONLY THE DEPLOYER CAN CALL THIS FUNCTION.
+     *
+     * Public users cannot use this function.
      */
     function emergencyWithdraw()
         external
         nonReentrant
+        onlyDeployer
     {
-        uint256 amount = balanceOf[msg.sender];
+        uint256 amount =
+            balanceOf[msg.sender];
 
         require(
             amount > 0,
-            "Staking: no stake"
+            "PonsV2StakingBETA: no stake"
         );
 
         balanceOf[msg.sender] = 0;
         totalStaked -= amount;
 
         rewards[msg.sender] = 0;
+
         userRewardPerTokenPaid[msg.sender] =
             rewardPerTokenStored;
 
@@ -798,11 +794,18 @@ contract PonsV2Staking is Ownable2Step, ReentrancyGuard, Pausable {
     // ETH handling
     // -------------------------------------------------------------------------
 
-    receive() external payable {
-        revert("Staking: no ETH");
+    receive()
+        external
+        payable
+    {
+        revert("PonsV2StakingBETA: no ETH");
     }
 
-    fallback() external payable {
-        revert("Staking: invalid call");
+    fallback()
+        external
+        payable
+    {
+        revert("PonsV2StakingBETA: invalid call");
     }
 }
+
