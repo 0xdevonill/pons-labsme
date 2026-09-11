@@ -42,7 +42,7 @@ The first asset used throughout this implementation is:
 
 **Ponstaking Staking Contract BETA** 
 ```text
-0xF9847Bf7d21bc38682c7b561C9C10B8552B09Ce5
+0x97f6Ea36d41A595256eb2fdDB75FF139ADb8789f
 ```
 
 `$PONSTAKE` is used exclusively as the reference testing token for the current development phase.
