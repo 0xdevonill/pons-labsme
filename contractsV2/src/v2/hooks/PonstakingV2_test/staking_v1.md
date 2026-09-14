@@ -26,7 +26,7 @@
 
 The initial implementation introduces a standalone staking engine where users can deposit a supported token, maintain a proportional position in the staking pool, and continuously accrue rewards funded by the **Ponstaking tax mechanism**.
 
-The **open staking contract is expected to go live within the next 12 hours**, at which point the staking mechanism will become publicly accessible, with **$PONSTAKE being the first token available for staking**.
+The **open staking contract is expected to go live within the next 6 hours**, at which point the staking mechanism will become publicly accessible, with **$PONSTAKE being the first token available for staking**.
 
 The contract mentioned below represents the **near-final development implementation** currently being used to finalize and validate the architecture. At this stage, it is **not publicly accessible and can only be interacted with by the development team**.
 
