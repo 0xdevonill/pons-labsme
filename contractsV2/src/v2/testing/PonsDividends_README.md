@@ -33,6 +33,11 @@
 > This wallet serves as the operational wallet for the **Agent layer**, acting as the execution point for authorized market operations within the PonsDividends architecture.
 >
 > The Agent Wallet is **not the treasury itself**. It is the execution component between the treasury's allocated capital and the market, operating within the permissions, limits and risk controls defined by the system.
+>
+> **Live Testing Contract:**
+> `0x642c4065517aa7db17ccd9f467c7e8dbedf466f7`
+>
+> The contract above represents the **live testing deployment** currently used to validate the PonsDividends infrastructure and Agent execution flow.
 
 <br>
 
