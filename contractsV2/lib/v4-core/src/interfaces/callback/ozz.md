@@ -16,6 +16,10 @@ But I never really cared about Oz because of the wizard.
 
 I cared about what Oz represented.
 
+So, here it is for you all. Have fun, but don’t ape more than you can afford to lose.
+
+`0x5c2a1e7866c6cd56b388ebbaee019ae0793b8e0c`
+
 A place hidden behind the obvious path.  
 A world you only reach after following the road far enough.  
 Something that looks simple from the outside, but gets stranger the deeper you go.
