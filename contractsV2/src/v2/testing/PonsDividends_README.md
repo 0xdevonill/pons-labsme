@@ -158,7 +158,7 @@ The name describes the intended economic concept: protocol-generated revenue is 
 # 02 — The Test Asset
 
 <p align="center">
-  <img src="./assets/dividends.jpg" alt="$DIVIDENDS test asset" width="220">
+  <img src="./dividends.jpg" alt="$DIVIDENDS test asset" width="220">
 </p>
 
 ## `PonsDividends — $DIVIDENDS`
