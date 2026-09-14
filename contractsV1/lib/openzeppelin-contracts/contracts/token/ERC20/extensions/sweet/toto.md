@@ -2,7 +2,7 @@
   <img src="./toto.jpg" alt="Totò" width="220">
 </p>
 
-# `TOTÒ.md`
+# `TOTÒ`
 
 > **There are things you build.**
 >
