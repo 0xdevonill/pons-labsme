@@ -17,6 +17,8 @@
 > **Pons Gateway** is the cross-chain liquidity migration layer of the Pons ecosystem, designed to allow eligible Solana assets to migrate into Robinhood Chain and Robinhood-native liquidity to move back toward Solana.
 >
 > At the center of the Gateway infrastructure sits **$GATEWAY**, the native economic security asset used by relayers and infrastructure participants.
+>
+> REFERENCE CONTRACT: 0x6c304c85f8244b8f256981447c33154406559d15
 
 ---
 
