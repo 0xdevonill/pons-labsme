@@ -32,8 +32,13 @@ Both generations are live source and both factories are verified on chain.
 
 Website: [ponsfamily.com](https://ponsfamily.com) · Twitter/X: [@ponsdotfamily](https://x.com/ponsdotfamily)
 
+## Frontend
+
+The live factories in this repository are consumed by a new Next.js 15 app in [`frontend/`](frontend/). It does not change, replace, or redeploy any Solidity. Contract wiring is documented in [`CONTRACTS.md`](CONTRACTS.md). Deployment: [`frontend/README.md`](frontend/README.md).
+
 ## Table of contents
 
+- [Frontend](#frontend)
 - [Deployed factories](#deployed-factories)
 - [V1 vs V2 at a glance](#v1-vs-v2-at-a-glance)
 - [V1 — CREATE2 factory + locked Uniswap V3 liquidity](#v1--create2-factory--locked-uniswap-v3-liquidity)
@@ -165,6 +170,8 @@ V2 replaces day-one concentrated liquidity with a fair-launch curve. Every launc
 ```
 .
 ├── README.md
+├── CONTRACTS.md                 # How V1/V2 factories, routers, lockers and ABIs connect
+├── frontend/                    # Next.js 15 + Wagmi + Viem UI (Vercel)
 ├── abi.json                     # V1 factory ABI
 ├── contract-meta.json           # V1 build/deployment metadata
 ├── media/
