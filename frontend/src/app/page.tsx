@@ -11,6 +11,7 @@ export default function HomePage() {
   const launches = useLaunches({ generation: "v2" });
   const featured = launches.data?.launches.slice(0, 6) ?? [];
   const meta = useLaunchMeta(featured);
+  const total = launches.data?.launches.length ?? 0;
 
   return (
     <div className="space-y-10">
@@ -32,6 +33,11 @@ export default function HomePage() {
               Explore launches
             </Link>
           </div>
+          {total > 0 ? (
+            <p className="mt-6 text-sm text-[var(--muted)]">
+              {total.toLocaleString()} live V2 launches indexed from TokenLaunched.
+            </p>
+          ) : null}
         </motion.div>
       </section>
 
@@ -48,6 +54,12 @@ export default function HomePage() {
               <div key={i} className="glass shimmer h-40 rounded-3xl" />
             ))}
           </div>
+        ) : launches.isError ? (
+          <div className="glass rounded-3xl p-8 text-sm text-[var(--muted)]">
+            Could not load launches. {launches.error.message}
+          </div>
+        ) : featured.length === 0 ? (
+          <div className="glass rounded-3xl p-8 text-sm text-[var(--muted)]">No V2 launches in this window yet.</div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {featured.map((launch) => {

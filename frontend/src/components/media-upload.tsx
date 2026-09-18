@@ -45,7 +45,14 @@ export function MediaUpload({
   }
 
   return (
-    <label className="glass flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-3xl border-dashed p-4 text-center">
+    <label
+      className="glass flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-3xl border-dashed p-4 text-center"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        handle(e.dataTransfer.files?.[0] ?? null).catch(() => undefined);
+      }}
+    >
       {preview ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={preview} alt="Token art" className="h-32 w-32 rounded-2xl object-cover" />

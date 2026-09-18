@@ -2,7 +2,6 @@
 
 import { useAccount } from "wagmi";
 import { useLaunches } from "@/hooks/useLaunches";
-import { useLaunchMeta } from "@/hooks/useLaunchMeta";
 import { SearchFilters } from "@/components/search-filters";
 import { ConnectButton } from "@/components/connect-button";
 
@@ -10,7 +9,6 @@ export default function MyTokensPage() {
   const { address, isConnected } = useAccount();
   const launches = useLaunches({ deployer: address, enabled: Boolean(address) });
   const list = launches.data?.launches ?? [];
-  const meta = useLaunchMeta(list, 80);
 
   return (
     <div>
@@ -25,8 +23,12 @@ export default function MyTokensPage() {
         </div>
       ) : launches.isLoading ? (
         <div className="glass shimmer h-64 rounded-3xl" />
+      ) : launches.isError ? (
+        <div className="glass rounded-3xl p-8 text-sm text-[var(--muted)]">
+          Could not load your launches. {launches.error.message}
+        </div>
       ) : (
-        <SearchFilters launches={list} extras={meta.data} />
+        <SearchFilters launches={list} />
       )}
     </div>
   );

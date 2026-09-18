@@ -1,8 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { usePublicClient } from "wagmi";
-import { DEFAULT_LOOKBACK, fetchLaunchLogs } from "@/lib/indexer";
+import { DEFAULT_LOOKBACK, parseLaunchRecord, type SerializedLaunch } from "@/lib/indexer";
 import type { Generation, LaunchRecord } from "@/lib/types";
 import type { Address } from "viem";
 
@@ -12,28 +11,35 @@ export function useLaunches(opts?: {
   lookback?: bigint;
   enabled?: boolean;
 }) {
-  const client = usePublicClient();
   const lookback = opts?.lookback ?? DEFAULT_LOOKBACK;
+  const generation = opts?.generation ?? "all";
+  const deployer = opts?.deployer;
 
   return useQuery({
-    queryKey: [
-      "launches",
-      opts?.generation ?? "all",
-      opts?.deployer ?? "any",
-      lookback.toString(),
-    ],
-    enabled: Boolean(client) && opts?.enabled !== false,
+    queryKey: ["launches", generation, deployer ?? "any", lookback.toString()],
+    enabled: opts?.enabled !== false,
+    staleTime: 15_000,
     queryFn: async () => {
-      if (!client) throw new Error("No client");
-      const latest = await client.getBlockNumber();
-      const fromBlock = latest > lookback ? latest - lookback : 0n;
-      const launches = await fetchLaunchLogs(client, {
-        generation: opts?.generation,
-        deployer: opts?.deployer,
-        fromBlock,
-        toBlock: latest,
+      const params = new URLSearchParams({
+        generation,
+        lookback: lookback.toString(),
       });
-      return { launches, fromBlock, toBlock: latest };
+      if (deployer) params.set("deployer", deployer);
+      const res = await fetch(`/api/tokens?${params.toString()}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(body.error || "Failed to index launches");
+      }
+      const json = (await res.json()) as {
+        fromBlock: string;
+        toBlock: string;
+        launches: SerializedLaunch[];
+      };
+      return {
+        launches: json.launches.map(parseLaunchRecord),
+        fromBlock: BigInt(json.fromBlock),
+        toBlock: BigInt(json.toBlock),
+      };
     },
   });
 }
