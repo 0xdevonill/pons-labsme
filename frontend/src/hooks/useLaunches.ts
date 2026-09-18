@@ -19,6 +19,7 @@ export function useLaunches(opts?: {
     queryKey: ["launches", generation, deployer ?? "any", lookback.toString()],
     enabled: opts?.enabled !== false,
     staleTime: 15_000,
+    retry: 2,
     queryFn: async () => {
       const params = new URLSearchParams({
         generation,

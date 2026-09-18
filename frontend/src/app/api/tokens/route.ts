@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createPublicClient, http, isAddress, type Address } from "viem";
-import { robinhood, RPC_URL } from "@/lib/chain";
+import { isAddress, type Address } from "viem";
 import { DEFAULT_LOOKBACK, fetchLaunchLogs, serializeLaunch, type SerializedLaunch } from "@/lib/indexer";
+import { makeRpcClient, withRetries } from "@/lib/rpc";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ type CachedPayload = {
 };
 
 const cache = new Map<string, { expires: number; payload: CachedPayload }>();
-const TTL_MS = 15_000;
+const TTL_MS = 45_000;
 
 function cacheKey(generation: string, deployer: string, lookback: string) {
   return `${generation}:${deployer}:${lookback}`;
@@ -35,34 +35,30 @@ export async function GET(req: NextRequest) {
   const hit = cache.get(key);
   if (hit && hit.expires > Date.now()) {
     return NextResponse.json(hit.payload, {
-      headers: { "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30" },
+      headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=45" },
     });
   }
 
   try {
-    const client = createPublicClient({
-      chain: robinhood,
-      transport: http(RPC_URL, { timeout: 25_000 }),
+    const payload = await withRetries(async () => {
+      const client = makeRpcClient();
+      const latest = await client.getBlockNumber();
+      const fromBlock = latest > lookback ? latest - lookback : 0n;
+      const launches = await fetchLaunchLogs(client, {
+        generation,
+        deployer,
+        fromBlock,
+        toBlock: latest,
+      });
+      return {
+        fromBlock: fromBlock.toString(),
+        toBlock: latest.toString(),
+        launches: launches.map(serializeLaunch),
+      };
     });
-
-    const latest = await client.getBlockNumber();
-    const fromBlock = latest > lookback ? latest - lookback : 0n;
-    const launches = await fetchLaunchLogs(client, {
-      generation,
-      deployer,
-      fromBlock,
-      toBlock: latest,
-    });
-
-    const payload: CachedPayload = {
-      fromBlock: fromBlock.toString(),
-      toBlock: latest.toString(),
-      launches: launches.map(serializeLaunch),
-    };
     cache.set(key, { expires: Date.now() + TTL_MS, payload });
-
     return NextResponse.json(payload, {
-      headers: { "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30" },
+      headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=45" },
     });
   } catch (error) {
     return NextResponse.json(
