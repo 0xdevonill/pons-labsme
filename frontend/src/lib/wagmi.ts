@@ -26,7 +26,12 @@ export const wagmiConfig = createConfig({
       : []),
   ],
   transports: {
-    [robinhood.id]: http(RPC_URL, { timeout: 20_000 }),
+    [robinhood.id]: http(RPC_URL, {
+      timeout: 20_000,
+      retryCount: 5,
+      retryDelay: 1_200,
+      batch: true,
+    }),
   },
   ssr: true,
   storage: createStorage({

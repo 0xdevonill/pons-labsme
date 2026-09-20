@@ -1,38 +1,69 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createPublicClient, http, isAddress, type Address } from "viem";
-import { robinhood, RPC_URL } from "@/lib/chain";
-import { DEFAULT_LOOKBACK, fetchLaunchLogs } from "@/lib/indexer";
+import { isAddress, type Address } from "viem";
+import { DEFAULT_LOOKBACK, fetchLaunchLogs, serializeLaunch, type SerializedLaunch } from "@/lib/indexer";
+import { makeRpcClient, withRetries } from "@/lib/rpc";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+type CachedPayload = {
+  fromBlock: string;
+  toBlock: string;
+  launches: SerializedLaunch[];
+};
+
+const cache = new Map<string, { expires: number; payload: CachedPayload }>();
+const TTL_MS = 45_000;
+
+function cacheKey(generation: string, deployer: string, lookback: string) {
+  return `${generation}:${deployer}:${lookback}`;
+}
 
 export async function GET(req: NextRequest) {
   const generation = (req.nextUrl.searchParams.get("generation") ?? "all") as "v1" | "v2" | "all";
   const deployerParam = req.nextUrl.searchParams.get("deployer");
   const deployer = deployerParam && isAddress(deployerParam) ? (deployerParam as Address) : undefined;
-  const lookback = BigInt(req.nextUrl.searchParams.get("lookback") ?? DEFAULT_LOOKBACK.toString());
+  const lookbackRaw = req.nextUrl.searchParams.get("lookback") ?? DEFAULT_LOOKBACK.toString();
+  let lookback: bigint;
+  try {
+    lookback = BigInt(lookbackRaw);
+  } catch {
+    return NextResponse.json({ error: "Invalid lookback" }, { status: 400 });
+  }
 
-  const client = createPublicClient({
-    chain: robinhood,
-    transport: http(RPC_URL),
-  });
+  const key = cacheKey(generation, deployer ?? "any", lookback.toString());
+  const hit = cache.get(key);
+  if (hit && hit.expires > Date.now()) {
+    return NextResponse.json(hit.payload, {
+      headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=45" },
+    });
+  }
 
-  const latest = await client.getBlockNumber();
-  const fromBlock = latest > lookback ? latest - lookback : 0n;
-  const launches = await fetchLaunchLogs(client, {
-    generation,
-    deployer,
-    fromBlock,
-    toBlock: latest,
-  });
-
-  return NextResponse.json({
-    fromBlock: fromBlock.toString(),
-    toBlock: latest.toString(),
-    launches: launches.map((item) => ({
-      ...item,
-      launchConfigId: item.launchConfigId.toString(),
-      graduationThreshold: item.graduationThreshold?.toString(),
-      blockNumber: item.blockNumber.toString(),
-    })),
-  });
+  try {
+    const payload = await withRetries(async () => {
+      const client = makeRpcClient();
+      const latest = await client.getBlockNumber();
+      const fromBlock = latest > lookback ? latest - lookback : 0n;
+      const launches = await fetchLaunchLogs(client, {
+        generation,
+        deployer,
+        fromBlock,
+        toBlock: latest,
+      });
+      return {
+        fromBlock: fromBlock.toString(),
+        toBlock: latest.toString(),
+        launches: launches.map(serializeLaunch),
+      };
+    });
+    cache.set(key, { expires: Date.now() + TTL_MS, payload });
+    return NextResponse.json(payload, {
+      headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=45" },
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to index TokenLaunched logs" },
+      { status: 502 },
+    );
+  }
 }

@@ -1,5 +1,6 @@
 import {
   type Address,
+  type Hash,
   type PublicClient,
   decodeEventLog,
 } from "viem";
@@ -134,6 +135,40 @@ export async function fetchLaunchLogs(
       return true;
     })
     .sort((a, b) => Number(b.blockNumber - a.blockNumber));
+}
+
+export type SerializedLaunch = Omit<LaunchRecord, "launchConfigId" | "graduationThreshold" | "blockNumber"> & {
+  launchConfigId: string;
+  graduationThreshold?: string;
+  blockNumber: string;
+};
+
+export function serializeLaunch(item: LaunchRecord): SerializedLaunch {
+  return {
+    ...item,
+    launchConfigId: item.launchConfigId.toString(),
+    graduationThreshold: item.graduationThreshold?.toString(),
+    blockNumber: item.blockNumber.toString(),
+  };
+}
+
+export function parseLaunchRecord(raw: SerializedLaunch): LaunchRecord {
+  return {
+    generation: raw.generation,
+    token: raw.token,
+    curve: raw.curve,
+    deployer: raw.deployer,
+    pairToken: raw.pairToken,
+    launchConfigId: BigInt(raw.launchConfigId),
+    graduationThreshold:
+      raw.graduationThreshold != null && raw.graduationThreshold !== ""
+        ? BigInt(raw.graduationThreshold)
+        : undefined,
+    pool: raw.pool,
+    dexFactory: raw.dexFactory,
+    blockNumber: BigInt(raw.blockNumber),
+    txHash: raw.txHash as Hash,
+  };
 }
 
 export async function fetchWindow(
