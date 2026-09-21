@@ -24,7 +24,10 @@ export function formatPct(value: number, digits = 1) {
 
 export function formatBps(bps: bigint | number) {
   const n = Number(bps);
-  return `${(n / 100).toFixed(n % 100 === 0 ? 0 : 2)}%`;
+  const pct = n / 100;
+  if (!Number.isFinite(pct)) return "—";
+  const digits = pct % 1 === 0 ? 0 : Math.round(pct * 10) % 1 === 0 ? 1 : 2;
+  return `${pct.toFixed(digits)}%`;
 }
 
 export function clamp01(n: number) {

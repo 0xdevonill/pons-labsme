@@ -1,7 +1,11 @@
-export const APP_NAME = "Helix";
-export const APP_TAGLINE = "Token market on Robinhood Chain";
+import { parseEther, isAddress, type Address } from "viem";
+import { ZERO_ADDRESS } from "./contracts/addresses";
+
+export const APP_NAME = "Fons";
+export const APP_TICKER = "FONS";
+export const APP_TAGLINE = "Launch and explore tokens on Robinhood Chain";
 export const APP_DESCRIPTION =
-  "Create, trade, and graduate tokens on Robinhood Chain with bonding curves, locked liquidity, and creator commission. Settles on the live Pons V1 and V2 contracts.";
+  "Launch and explore fixed-supply tokens on Robinhood Chain. Pair against ETH, USDG, or tokenized stocks. Your wallet submits every transaction.";
 
 export const CONTACT = {
   email: "contact@ponsfamily.com",
@@ -10,4 +14,27 @@ export const CONTACT = {
   twitterHandle: "@ponsdotfamily",
 } as const;
 
-export const THEME_STORAGE_KEY = "helix-theme";
+export const THEME_STORAGE_KEY = "fons-theme";
+
+/** Fons platform fee charged on every create, in ETH. */
+export const PLATFORM_FEE_ETH = "0.005";
+export const PLATFORM_FEE = parseEther(PLATFORM_FEE_ETH);
+
+export const FONS_FEE_RECIPIENT = (
+  process.env.NEXT_PUBLIC_FONS_FEE_RECIPIENT && isAddress(process.env.NEXT_PUBLIC_FONS_FEE_RECIPIENT)
+    ? process.env.NEXT_PUBLIC_FONS_FEE_RECIPIENT
+    : ZERO_ADDRESS
+) as Address;
+
+export const FONS_TOKEN_ADDRESS = (
+  process.env.NEXT_PUBLIC_FONS_TOKEN && isAddress(process.env.NEXT_PUBLIC_FONS_TOKEN)
+    ? process.env.NEXT_PUBLIC_FONS_TOKEN
+    : ""
+) as Address | "";
+
+export const PINNED_TOKEN = {
+  name: "Fons",
+  symbol: "FONS",
+  description: "The Fons platform token. It stays pinned at the top of the market. Add the contract address after launch.",
+  logo: "/logo.png",
+};

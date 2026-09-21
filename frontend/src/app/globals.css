@@ -10,32 +10,34 @@
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-panel: var(--panel);
-  --color-mint: #5eead4;
+  --color-mint: #d6ff3a;
   --color-gold: #d4af67;
 }
 
 :root,
 .light {
-  --bg0: #f6f4ef;
-  --bg1: #ece8e0;
-  --ink: #12151c;
-  --muted: #5d6675;
-  --line: rgba(18, 21, 28, 0.1);
-  --panel: rgba(255, 255, 255, 0.72);
-  --glow: rgba(94, 234, 212, 0.16);
-  --accent: #0f766e;
+  --bg0: #f3f3f3;
+  --bg1: #ececec;
+  --ink: #171717;
+  --muted: #6b6b6b;
+  --line: rgba(23, 23, 23, 0.08);
+  --panel: #ffffff;
+  --glow: rgba(214, 255, 58, 0.18);
+  --accent: #111111;
+  --lime: #d6ff3a;
   color-scheme: light;
 }
 
 .dark {
-  --bg0: #08090d;
-  --bg1: #10141c;
-  --ink: #f3f5f8;
-  --muted: #93a0b3;
+  --bg0: #0c0c0c;
+  --bg1: #141414;
+  --ink: #f4f4f4;
+  --muted: #9a9a9a;
   --line: rgba(255, 255, 255, 0.08);
-  --panel: rgba(16, 20, 28, 0.72);
-  --glow: rgba(94, 234, 212, 0.1);
-  --accent: #5eead4;
+  --panel: #1a1a1a;
+  --glow: rgba(214, 255, 58, 0.08);
+  --accent: #d6ff3a;
+  --lime: #d6ff3a;
   color-scheme: dark;
 }
 
@@ -45,10 +47,7 @@ body {
 }
 
 body {
-  background:
-    radial-gradient(900px 480px at 8% -12%, var(--glow), transparent 58%),
-    radial-gradient(720px 420px at 100% 0%, rgba(124, 140, 255, 0.12), transparent 52%),
-    linear-gradient(180deg, var(--bg0), var(--bg1));
+  background: var(--bg0);
   color: var(--ink);
   font-family: var(--font-sans);
 }
@@ -58,28 +57,16 @@ body {
 }
 
 ::selection {
-  background: rgba(94, 234, 212, 0.28);
+  background: rgba(214, 255, 58, 0.45);
 }
 
 .glass {
   background: var(--panel);
   border: 1px solid var(--line);
-  backdrop-filter: blur(22px) saturate(140%);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.08) inset,
-    0 18px 40px rgba(0, 0, 0, 0.12);
 }
 
 .dark .glass {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025));
-}
-
-.grid-fade {
-  background-image:
-    linear-gradient(var(--line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: radial-gradient(ellipse at center, black 28%, transparent 76%);
+  background: var(--panel);
 }
 
 @keyframes shimmer {
@@ -103,17 +90,24 @@ body {
 .field {
   width: 100%;
   height: 2.75rem;
-  border-radius: 0.9rem;
-  background: color-mix(in srgb, var(--panel) 78%, transparent);
-  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  background: #f6f6f6;
+  border: 1px solid transparent;
   padding: 0 0.9rem;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dark .field {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .field:focus {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+  border-color: rgba(23, 23, 23, 0.2);
+  background: #fff;
+}
+
+.dark .field:focus {
+  background: rgba(255, 255, 255, 0.09);
 }
 
 textarea.field {
@@ -127,19 +121,13 @@ textarea.field {
   justify-content: center;
   height: 2.75rem;
   border-radius: 999px;
-  background: #5eead4;
-  color: #04221c;
+  background: #d6ff3a;
+  color: #111;
   font-weight: 600;
-  transition: transform 0.15s ease, opacity 0.15s ease;
-}
-
-.btn-primary:hover {
-  transform: translateY(-1px);
 }
 
 .btn-primary:disabled {
   opacity: 0.4;
-  transform: none;
 }
 
 .btn-secondary {
@@ -149,7 +137,7 @@ textarea.field {
   height: 2.75rem;
   border-radius: 999px;
   border: 1px solid var(--line);
-  background: color-mix(in srgb, var(--panel) 80%, transparent);
+  background: var(--panel);
   font-weight: 500;
 }
 
@@ -162,9 +150,15 @@ textarea.field {
 }
 
 .chip-active {
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
-  color: var(--ink);
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+
+.dark .chip-active {
+  background: #d6ff3a;
+  color: #111;
+  border-color: #d6ff3a;
 }
 
 .logo-frame {
@@ -176,7 +170,7 @@ textarea.field {
 }
 
 .commission-range {
-  accent-color: #5eead4;
+  accent-color: #111;
   height: 0.35rem;
 }
 
@@ -186,4 +180,13 @@ textarea.field {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+.launchpad-panel {
+  background: linear-gradient(180deg, #f4ffe8 0%, #ffffff 42%);
+  border: 1px solid var(--line);
+}
+
+.dark .launchpad-panel {
+  background: linear-gradient(180deg, rgba(214, 255, 58, 0.08) 0%, var(--panel) 42%);
 }

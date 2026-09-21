@@ -29,7 +29,7 @@ export default function MyTokensPage() {
           Could not load your launches. {launches.error.message}
         </div>
       ) : (
-        <SearchFilters launches={list} />
+        <SearchFilters launches={list} showPinned={false} />
       )}
     </div>
   );

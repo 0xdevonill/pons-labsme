@@ -15,16 +15,13 @@ const ThemeContext = createContext<{
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
-    const stored = (window.localStorage.getItem("helix-theme") ?? window.localStorage.getItem("pons-theme")) as Theme | null;
-    const initial =
-      stored === "light" || stored === "dark"
-        ? stored
-        : window.matchMedia("(prefers-color-scheme: light)").matches
-          ? "light"
-          : "dark";
+    const stored = (window.localStorage.getItem("fons-theme") ??
+      window.localStorage.getItem("helix-theme") ??
+      window.localStorage.getItem("pons-theme")) as Theme | null;
+    const initial = stored === "light" || stored === "dark" ? stored : "light";
     setTheme(initial);
     document.documentElement.classList.toggle("dark", initial === "dark");
     document.documentElement.classList.toggle("light", initial === "light");
@@ -33,7 +30,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
     document.documentElement.classList.toggle("light", theme === "light");
-    window.localStorage.setItem("helix-theme", theme);
+    window.localStorage.setItem("fons-theme", theme);
   }, [theme]);
 
   const value = useMemo(

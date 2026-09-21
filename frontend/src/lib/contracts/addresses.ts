@@ -26,26 +26,42 @@ export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as cons
 export const EXPLORER_URL = "https://robinhoodchain.blockscout.com";
 
 export const KNOWN_PAIR_TOKENS = [
-  { symbol: "ETH", address: ZERO_ADDRESS, decimals: 18 },
-  { symbol: "USDG", address: "0x5fc5360d0400a0fd4f2af552add042d716f1d168" as Address, decimals: 6 },
-  { symbol: "AAPL", address: "0xaf3d76f1834a1d425780943c99ea8a608f8a93f9" as Address, decimals: 18 },
-  { symbol: "AMD", address: "0x86923f96303d656e4aa86d9d42d1e57ad2023fdc" as Address, decimals: 18 },
-  { symbol: "AMZN", address: "0x12f190a9f9d7d37a250758b26824b97ce941bf54" as Address, decimals: 18 },
-  { symbol: "COIN", address: "0x6330d8c3178a418788df01a47479c0ce7ccf450b" as Address, decimals: 18 },
-  { symbol: "CRCL", address: "0xdf0992e440dd0be65bd8439b609d6d4366bf1cb5" as Address, decimals: 18 },
-  { symbol: "GME", address: "0x1b0e319c6a659f002271b69db8a7df2f911c153e" as Address, decimals: 18 },
-  { symbol: "GOOGL", address: "0x2e0847e8910a9732eb3fb1bb4b70a580adad4fe3" as Address, decimals: 18 },
-  { symbol: "META", address: "0xc0d6457c16cc70d6790dd43521c899c87ce02f35" as Address, decimals: 18 },
-  { symbol: "MSFT", address: "0xe93237c50d904957cf27e7b1133b510c669c2e74" as Address, decimals: 18 },
-  { symbol: "MU", address: "0xff080c8ce2e5feadaca0da81314ae59d232d4afd" as Address, decimals: 18 },
-  { symbol: "NVDA", address: "0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec" as Address, decimals: 18 },
-  { symbol: "PLTR", address: "0x894e1ec2d74ffe5aef8dc8a9e84686accb964f2a" as Address, decimals: 18 },
-  { symbol: "SNDK", address: "0xb90a19ff0af67f7779aff50a882a9cff42446400" as Address, decimals: 18 },
-  { symbol: "SPCX", address: "0x4a0e65a3eccec6dbe60ae065f2e7bb85fae35eea" as Address, decimals: 18 },
-  { symbol: "SPY", address: "0x117cc2133c37b721f49de2a7a74833232b3b4c0c" as Address, decimals: 18 },
-  { symbol: "TSLA", address: "0x322f0929c4625ed5bad873c95208d54e1c003b2d" as Address, decimals: 18 },
-  { symbol: "WETH", address: V1_DEFAULT_PAIR, decimals: 18 },
+  { symbol: "ETH", name: "Ether", address: ZERO_ADDRESS, decimals: 18, kind: "native" as const },
+  { symbol: "USDG", name: "USDG", address: "0x5fc5360d0400a0fd4f2af552add042d716f1d168" as Address, decimals: 6, kind: "stable" as const },
+  { symbol: "cbBTC", name: "Coinbase BTC", address: "0xcec185eb182c47d1ba1efc84e6959e18cd620be4" as Address, decimals: 8, kind: "crypto" as const },
+  { symbol: "NVDA", name: "NVIDIA", address: "0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec" as Address, decimals: 18, kind: "stock" as const },
+  { symbol: "TSLA", name: "Tesla", address: "0x322f0929c4625ed5bad873c95208d54e1c003b2d" as Address, decimals: 18, kind: "stock" as const },
+  { symbol: "AAPL", name: "Apple", address: "0xaf3d76f1834a1d425780943c99ea8a608f8a93f9" as Address, decimals: 18, kind: "stock" as const },
+  { symbol: "GOOGL", name: "Alphabet Class A", address: "0x2e0847e8910a9732eb3fb1bb4b70a580adad4fe3" as Address, decimals: 18, kind: "stock" as const },
+  { symbol: "AMZN", name: "Amazon", address: "0x12f190a9f9d7d37a250758b26824b97ce941bf54" as Address, decimals: 18, kind: "stock" as const },
+  { symbol: "MSFT", name: "Microsoft", address: "0xe93237c50d904957cf27e7b1133b510c669c2e74" as Address, decimals: 18, kind: "stock" as const },
+  { symbol: "META", name: "Meta", address: "0xc0d6457c16cc70d6790dd43521c899c87ce02f35" as Address, decimals: 18, kind: "stock" as const },
+  { symbol: "AMD", name: "AMD", address: "0x86923f96303d656e4aa86d9d42d1e57ad2023fdc" as Address, decimals: 18, kind: "stock" as const },
+  { symbol: "GME", name: "GameStop", address: "0x1b0e319c6a659f002271b69db8a7df2f911c153e" as Address, decimals: 18, kind: "stock" as const },
+  { symbol: "SPY", name: "SPDR S&P 500", address: "0x117cc2133c37b721f49de2a7a74833232b3b4c0c" as Address, decimals: 18, kind: "stock" as const },
+  { symbol: "SPCX", name: "SpaceX Class A", address: "0x4a0e65a3eccec6dbe60ae065f2e7bb85fae35eea" as Address, decimals: 18, kind: "stock" as const },
+  { symbol: "COIN", name: "Coinbase", address: "0x6330d8c3178a418788df01a47479c0ce7ccf450b" as Address, decimals: 18, kind: "stock" as const },
+  { symbol: "PLTR", name: "Palantir", address: "0x894e1ec2d74ffe5aef8dc8a9e84686accb964f2a" as Address, decimals: 18, kind: "stock" as const },
+  { symbol: "CRCL", name: "Circle", address: "0xdf0992e440dd0be65bd8439b609d6d4366bf1cb5" as Address, decimals: 18, kind: "stock" as const },
+  { symbol: "MU", name: "Micron", address: "0xff080c8ce2e5feadaca0da81314ae59d232d4afd" as Address, decimals: 18, kind: "stock" as const },
+  { symbol: "SNDK", name: "Sandisk", address: "0xb90a19ff0af67f7779aff50a882a9cff42446400" as Address, decimals: 18, kind: "stock" as const },
+  { symbol: "WETH", name: "Wrapped ETH", address: V1_DEFAULT_PAIR, decimals: 18, kind: "crypto" as const },
 ] as const;
+
+export function pairInfo(address: Address | undefined) {
+  if (!address || address === ZERO_ADDRESS) {
+    return KNOWN_PAIR_TOKENS[0];
+  }
+  return (
+    KNOWN_PAIR_TOKENS.find((token) => token.address.toLowerCase() === address.toLowerCase()) ?? {
+      symbol: `${address.slice(0, 6)}…${address.slice(-4)}`,
+      name: "Unknown",
+      address,
+      decimals: 18,
+      kind: "crypto" as const,
+    }
+  );
+}
 
 export function pairSymbol(address: Address | undefined) {
   if (!address || address === ZERO_ADDRESS) return "ETH";

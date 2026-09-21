@@ -16,10 +16,10 @@ export const wagmiConfig = createConfig({
             projectId: walletConnectId,
             showQrModal: true,
             metadata: {
-              name: "Helix",
-              description: "Token market on Robinhood Chain",
+              name: "Fons",
+              description: "Token launchpad on Robinhood Chain",
               url: "https://ponsfamily.com",
-              icons: ["/logo.svg"],
+              icons: ["/logo.png"],
             },
           }),
         ]

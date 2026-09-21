@@ -40,7 +40,10 @@ export function TokenLogo({
     setFailed(false);
   }, [initial]);
 
-  const fallback = (alt.replace(/\$/g, "").trim().slice(0, 1) || "H").toUpperCase();
+  const fallback = (() => {
+    const cleaned = alt.replace(/\$/g, "").replace(/^0x[a-fA-F0-9]+$/i, "").trim();
+    return (cleaned.slice(0, 1) || "F").toUpperCase();
+  })();
 
   return (
     <div

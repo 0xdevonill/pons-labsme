@@ -65,7 +65,7 @@ export function MediaUpload({
         </div>
       ) : (
         <>
-          <p className="font-medium">Drop token art</p>
+          <p className="font-medium">Choose image</p>
           <p className="mt-1 max-w-sm text-xs leading-5 text-[var(--muted)]">{ACCEPTED_MEDIA_LABEL}</p>
         </>
       )}
