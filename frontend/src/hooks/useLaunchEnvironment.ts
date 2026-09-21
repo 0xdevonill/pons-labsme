@@ -133,7 +133,10 @@ export function useLaunchEnvironment() {
           allConfigs: v1Configs,
           dex: v1Dex.filter((d) => d.enabled),
         },
-        pairs: pairs.filter((p) => p.approved && (p.address === ZERO_ADDRESS || p.phantomQuote > 0n)),
+        pairs: pairs.map((p) => ({
+          ...p,
+          approved: p.address === ZERO_ADDRESS || (Boolean(p.approved) && p.phantomQuote > 0n),
+        })),
       };
     },
   });

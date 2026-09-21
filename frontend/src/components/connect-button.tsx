@@ -3,7 +3,7 @@
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { useState } from "react";
-import { Wallet, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { shorten } from "@/lib/format";
 import { ROBINHOOD_CHAIN_ID } from "@/lib/chain";
 import { cn } from "@/lib/cn";
@@ -21,29 +21,23 @@ export function ConnectButton() {
       <div className="relative">
         <button
           onClick={() => setOpen((v) => !v)}
-          className={cn(
-            "glass flex h-10 items-center gap-2 rounded-full px-3 text-sm",
-            wrong && "border-amber-400/60",
-          )}
+          className={cn("flex h-10 items-center gap-2 rounded-full bg-black px-3 text-sm text-white", wrong && "bg-amber-500")}
         >
-          <span className="h-2 w-2 rounded-full bg-[#5eead4]" />
+          <span className="h-2 w-2 rounded-full bg-[#d6ff3a]" />
           {shorten(address)}
           <ChevronDown size={14} />
         </button>
         {open ? (
-          <div className="glass absolute right-0 mt-2 w-56 overflow-hidden rounded-2xl p-2 text-sm">
+          <div className="absolute right-0 mt-2 w-56 overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-2 text-sm shadow-lg">
             {wrong ? (
-              <button
-                className="w-full rounded-xl px-3 py-2 text-left hover:bg-white/10"
-                onClick={() => switchChain({ chainId: ROBINHOOD_CHAIN_ID })}
-              >
+              <button className="w-full rounded-xl px-3 py-2 text-left hover:bg-black/5" onClick={() => switchChain({ chainId: ROBINHOOD_CHAIN_ID })}>
                 Switch to Robinhood Chain
               </button>
             ) : (
               <p className="px-3 py-2 text-[var(--muted)]">Robinhood Chain</p>
             )}
             <button
-              className="w-full rounded-xl px-3 py-2 text-left hover:bg-white/10"
+              className="w-full rounded-xl px-3 py-2 text-left hover:bg-black/5"
               onClick={() => {
                 disconnect();
                 setOpen(false);
@@ -59,18 +53,12 @@ export function ConnectButton() {
 
   return (
     <div className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="glass flex h-10 items-center gap-2 rounded-full px-3 text-sm"
-      >
-        <Wallet size={15} />
+      <button onClick={() => setOpen((v) => !v)} className="btn-primary h-10 px-4 text-sm">
         Connect
       </button>
       {open ? (
-        <div className="glass absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl p-2">
-          <p className="px-3 pb-2 pt-1 text-xs uppercase tracking-wide text-[var(--muted)]">
-            Robinhood Network
-          </p>
+        <div className="absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-2 shadow-lg">
+          <p className="px-3 pb-2 pt-1 text-xs uppercase tracking-wide text-[var(--muted)]">Robinhood Network</p>
           {connectors.map((connector) => (
             <button
               key={connector.uid}
@@ -79,16 +67,13 @@ export function ConnectButton() {
                 connect({ connector, chainId: ROBINHOOD_CHAIN_ID });
                 setOpen(false);
               }}
-              className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm hover:bg-white/10"
+              className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm hover:bg-black/5"
             >
               <span>{connector.name === "Injected" ? "Robinhood Wallet / Browser" : connector.name}</span>
             </button>
           ))}
           {connectors.length === 0 ? (
-            <button
-              className="w-full rounded-xl px-3 py-2 text-left text-sm"
-              onClick={() => connect({ connector: injected(), chainId: ROBINHOOD_CHAIN_ID })}
-            >
+            <button className="w-full rounded-xl px-3 py-2 text-left text-sm" onClick={() => connect({ connector: injected(), chainId: ROBINHOOD_CHAIN_ID })}>
               Browser wallet
             </button>
           ) : null}

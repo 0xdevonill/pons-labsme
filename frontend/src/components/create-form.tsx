@@ -1,6 +1,6 @@
 "use client";
 
-import { useAccount, usePublicClient, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useSendTransaction, useWriteContract } from "wagmi";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { encodeAbiParameters, keccak256, parseEther, toHex, zeroAddress, type Address, type Hex } from "viem";
@@ -8,8 +8,11 @@ import { useLaunchEnvironment } from "@/hooks/useLaunchEnvironment";
 import { MediaUpload } from "./media-upload";
 import { TokenPreview } from "./token-preview";
 import { CreatorCommission } from "./creator-commission";
+import { PairAssetPicker } from "./pair-asset-picker";
 import { buildMetadata, uploadLaunchMedia } from "@/lib/ipfs";
-import { V1_FACTORY, V2_FACTORY, V2_LAUNCH_AND_BUY, ZERO_ADDRESS } from "@/lib/contracts/addresses";
+import { FONS_FEE_RECIPIENT, PLATFORM_FEE_ETH } from "@/lib/brand";
+import { platformFeeDue } from "@/lib/fees";
+import { pairInfo, V1_FACTORY, V2_FACTORY, V2_LAUNCH_AND_BUY, ZERO_ADDRESS } from "@/lib/contracts/addresses";
 import { erc20Abi, v1FactoryAbi, v2FactoryAbi, v2LaunchAndBuyAbi } from "@/lib/contracts/abis";
 import { formatAmount } from "@/lib/format";
 import { emptySocials } from "@/lib/types";
@@ -18,19 +21,12 @@ function randomSalt(): Hex {
   return toHex(crypto.getRandomValues(new Uint8Array(32)));
 }
 
-const SOCIAL_LABELS = {
-  twitter: "X / Twitter",
-  telegram: "Telegram",
-  discord: "Discord",
-  website: "Website",
-  farcaster: "Farcaster",
-} as const;
-
 export function CreateForm() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
   const client = usePublicClient();
   const { writeContractAsync, isPending } = useWriteContract();
+  const { sendTransactionAsync } = useSendTransaction();
   const env = useLaunchEnvironment();
 
   const [generation, setGeneration] = useState<"v2" | "v1">("v2");
@@ -48,17 +44,32 @@ export function CreateForm() {
   const [buybackEnabled, setBuybackEnabled] = useState(true);
   const [initialBuy, setInitialBuy] = useState("");
   const [feeWallet, setFeeWallet] = useState("");
+  const [advanced, setAdvanced] = useState(false);
   const [status, setStatus] = useState("");
 
-  const v2Config = env.data?.v2.configs[configId] ?? env.data?.v2.configs[0];
+  const v2Config = env.data?.v2.configs.find((c) => Number(c.id) === configId) ?? env.data?.v2.configs[0];
   const supplyLabel = v2Config ? formatAmount(v2Config.supply, 18, 0) : "1B";
   const maxCreatorTaxBps = Number(env.data?.v2.maxCreatorTaxBps ?? 1000);
   const curveFeeBps = Number(v2Config?.curveFeeBps ?? 100);
+  const pair = pairInfo(pairToken);
+  const pairMeta = env.data?.pairs.find((p) => p.address.toLowerCase() === pairToken.toLowerCase());
+  const threshold = pairMeta?.graduationThreshold ?? v2Config?.graduationThreshold ?? 0n;
+  const graduationLabel = threshold
+    ? `${formatAmount(threshold, pair.decimals, 4)} ${pair.symbol}`
+    : `— ${pair.symbol}`;
+  const fees = platformFeeDue(generation === "v2" ? env.data?.v2.launchFee : env.data?.v1.launchFee);
 
   const canSubmit = useMemo(
     () => Boolean(name.trim() && symbol.trim() && file && isConnected && !isPending),
     [name, symbol, file, isConnected, isPending],
   );
+
+  async function collectPlatformFee() {
+    if (fees.extra <= 0n) return;
+    if (!FONS_FEE_RECIPIENT || FONS_FEE_RECIPIENT === ZERO_ADDRESS) return;
+    setStatus("Paying the 0.005 ETH Fons platform fee…");
+    await sendTransactionAsync({ to: FONS_FEE_RECIPIENT, value: fees.extra });
+  }
 
   async function launch() {
     if (!client || !address || !file) return;
@@ -71,10 +82,7 @@ export function CreateForm() {
       animated,
       ...socials,
     });
-    const uploaded = await uploadLaunchMedia({
-      file,
-      metadata: imageMeta,
-    });
+    const uploaded = await uploadLaunchMedia({ file, metadata: imageMeta });
     const logo = uploaded.metadataUri;
     if (logo.length > 512) throw new Error("Metadata URI exceeds on-chain logo length cap.");
 
@@ -89,6 +97,10 @@ export function CreateForm() {
     if (generation === "v2") {
       const selected = env.data?.v2.configs.find((c) => Number(c.id) === configId) ?? env.data?.v2.configs[0];
       if (!selected) throw new Error("No V2 launch config");
+      const livePair = env.data?.pairs.find((p) => p.address.toLowerCase() === pairToken.toLowerCase());
+      if (pairToken !== ZERO_ADDRESS && !livePair?.approved) {
+        throw new Error(`${pair.symbol} is not an approved quote asset on the live factory right now.`);
+      }
       const can = await client.readContract({
         address: V2_FACTORY,
         abi: v2FactoryAbi,
@@ -104,7 +116,6 @@ export function CreateForm() {
         args: [selected.id, pairToken],
       });
       const salt = randomSalt();
-      const fee = env.data!.v2.launchFee;
       const buy = initialBuy ? parseEther(initialBuy) : 0n;
       const tax = Math.min(maxCreatorTaxBps, Math.max(0, Math.round(creatorTaxBps)));
       const params = {
@@ -120,6 +131,7 @@ export function CreateForm() {
         salt,
       };
 
+      await collectPlatformFee();
       setStatus("Confirm the launch in your wallet…");
       if (buy > 0n) {
         if (pairToken !== ZERO_ADDRESS) {
@@ -135,7 +147,7 @@ export function CreateForm() {
           abi: v2LaunchAndBuyAbi,
           functionName: "launchAndBuy",
           args: [params, selected.id, pairToken, buy, 0n, address, []],
-          value: pairToken === ZERO_ADDRESS ? fee + buy : fee,
+          value: pairToken === ZERO_ADDRESS ? fees.factory + buy : fees.factory,
         });
       } else {
         await writeContractAsync({
@@ -143,39 +155,37 @@ export function CreateForm() {
           abi: v2FactoryAbi,
           functionName: "launchToken",
           args: [params, selected.id, pairToken],
-          value: fee,
+          value: fees.factory,
         });
       }
     } else {
       const selected = env.data?.v1.configs[0];
       const dex = env.data?.v1.dex[dexId] ?? env.data?.v1.dex[0];
       if (!selected || !dex) throw new Error("No V1 launch config");
-      if (!env.data?.v1.launchEnabled) {
-        setStatus("V1 public launches are closed. The transaction will revert unless you are whitelisted.");
-      }
       const salt = keccak256(
         encodeAbiParameters([{ type: "address" }, { type: "uint256" }], [address, BigInt(Date.now())]),
       );
       const buy = initialBuy ? parseEther(initialBuy) : 0n;
+      await collectPlatformFee();
       setStatus("Confirm the V1 launch in your wallet…");
       await writeContractAsync({
         address: V1_FACTORY,
         abi: v1FactoryAbi,
         functionName: "launchToken",
-          args: [
-            {
-              name: name.trim(),
-              symbol: symbol.trim().toUpperCase(),
-              logo,
-              description: description.trim(),
-              socials: socialTuple,
-              feeWallet: (feeWallet || zeroAddress) as Address,
-            },
-            selected.id,
-            dex.id,
-            salt,
-          ] as const,
-        value: env.data!.v1.launchFee + buy,
+        args: [
+          {
+            name: name.trim(),
+            symbol: symbol.trim().toUpperCase(),
+            logo,
+            description: description.trim(),
+            socials: socialTuple,
+            feeWallet: (feeWallet || zeroAddress) as Address,
+          },
+          selected.id,
+          dex.id,
+          salt,
+        ] as const,
+        value: fees.factory + buy,
       });
     }
 
@@ -184,137 +194,149 @@ export function CreateForm() {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+    <div className="overflow-hidden rounded-[32px] bg-white shadow-sm dark:bg-[var(--panel)] lg:grid lg:grid-cols-[minmax(0,1fr)_340px]">
       <form
-        className="space-y-5"
+        className="space-y-4 p-6 md:p-8"
         onSubmit={(e) => {
           e.preventDefault();
           launch().catch((error) => setStatus(error instanceof Error ? error.message : "Launch failed"));
         }}
       >
-        <div className="flex rounded-full bg-white/10 p-1 text-sm">
-          {(["v2", "v1"] as const).map((item) => (
-            <button
-              type="button"
-              key={item}
-              onClick={() => setGeneration(item)}
-              className={`flex-1 rounded-full py-2 ${generation === item ? "bg-[var(--bg0)]" : ""}`}
-            >
-              {item === "v2" ? "V2 bonding curve" : "V1 Uniswap V3"}
-            </button>
-          ))}
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-tight">Launch token</h1>
+          <div className="flex rounded-full bg-[#f3f3f3] p-1 text-sm dark:bg-white/10">
+            {(["v2", "v1"] as const).map((item) => (
+              <button
+                type="button"
+                key={item}
+                onClick={() => setGeneration(item)}
+                className={`rounded-full px-3 py-1 ${generation === item ? "bg-white shadow-sm dark:bg-black" : "text-[var(--muted)]"}`}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Name">
-            <input value={name} maxLength={64} onChange={(e) => setName(e.target.value)} className="field" placeholder="Helix Duck" required />
+            <input value={name} maxLength={64} onChange={(e) => setName(e.target.value)} className="field" placeholder="Token name" required />
           </Field>
-          <Field label="Symbol">
-            <input value={symbol} maxLength={16} onChange={(e) => setSymbol(e.target.value)} className="field" placeholder="DUCK" required />
+          <Field label="Ticker">
+            <input value={symbol} maxLength={16} onChange={(e) => setSymbol(e.target.value)} className="field" placeholder="symbol" required />
           </Field>
         </div>
         <Field label="Description">
-          <textarea value={description} maxLength={2048} onChange={(e) => setDescription(e.target.value)} className="field min-h-28" placeholder="Tell traders what this token is about." />
+          <textarea
+            value={description}
+            maxLength={2048}
+            onChange={(e) => setDescription(e.target.value)}
+            className="field min-h-24"
+            placeholder="A short description of the token"
+          />
         </Field>
-        <MediaUpload
-          file={file}
-          onChange={(next, url, nextAnimated) => {
-            setFile(next);
-            setPreview(url);
-            setAnimated(nextAnimated);
-          }}
-        />
+        <div>
+          <p className="mb-1 text-sm text-[var(--muted)]">Token image</p>
+          <MediaUpload
+            file={file}
+            onChange={(next, url, nextAnimated) => {
+              setFile(next);
+              setPreview(url);
+              setAnimated(nextAnimated);
+            }}
+          />
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          {(["twitter", "telegram", "discord", "website", "farcaster"] as const).map((key) => (
-            <Field key={key} label={SOCIAL_LABELS[key]}>
-              <input
-                value={socials[key]}
-                maxLength={256}
-                onChange={(e) => setSocials((s) => ({ ...s, [key]: e.target.value }))}
-                className="field"
-                placeholder={key === "website" ? "https://" : ""}
-              />
-            </Field>
-          ))}
+          <Field label="X profile">
+            <input value={socials.twitter} maxLength={256} onChange={(e) => setSocials((s) => ({ ...s, twitter: e.target.value }))} className="field" placeholder="x.com/handle" />
+          </Field>
+          <Field label="Telegram">
+            <input value={socials.telegram} maxLength={256} onChange={(e) => setSocials((s) => ({ ...s, telegram: e.target.value }))} className="field" placeholder="t.me/community" />
+          </Field>
         </div>
 
         {generation === "v2" ? (
           <>
-            <Field label="Quote asset">
-              <select value={pairToken} onChange={(e) => setPairToken(e.target.value as Address)} className="field">
-                {(env.data?.pairs ?? []).map((pair) => (
-                  <option key={pair.address} value={pair.address}>
-                    {pair.symbol}
+            <PairAssetPicker value={pairToken} onChange={setPairToken} pairs={env.data?.pairs ?? []} />
+            <Field label={`Developer buy (${pair.symbol})`}>
+              <input value={initialBuy} onChange={(e) => setInitialBuy(e.target.value)} className="field" placeholder="0.00" />
+            </Field>
+            <button type="button" onClick={() => setAdvanced((v) => !v)} className="text-sm text-[var(--muted)]">
+              Advanced {advanced ? "▴" : "▾"}
+            </button>
+            {advanced ? (
+              <div className="space-y-4">
+                {(env.data?.v2.configs.length ?? 0) > 1 ? (
+                  <Field label="Launch config">
+                    <select value={configId} onChange={(e) => setConfigId(Number(e.target.value))} className="field">
+                      {(env.data?.v2.configs ?? []).map((config) => (
+                        <option key={String(config.id)} value={Number(config.id)}>
+                          Config {String(config.id)} · fee {Number(config.curveFeeBps) / 100}%
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                ) : null}
+                <Field label="Creator wallet">
+                  <input value={feeWallet} onChange={(e) => setFeeWallet(e.target.value)} className="field" placeholder={address ?? "0x…"} />
+                </Field>
+                <CreatorCommission
+                  value={Math.min(maxCreatorTaxBps, creatorTaxBps)}
+                  maxBps={maxCreatorTaxBps}
+                  curveFeeBps={curveFeeBps}
+                  onChange={setCreatorTaxBps}
+                />
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={buybackEnabled} onChange={(e) => setBuybackEnabled(e.target.checked)} />
+                  Enable five-year buyback vest
+                </label>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <Field label="DEX profile">
+              <select value={dexId} onChange={(e) => setDexId(Number(e.target.value))} className="field">
+                {(env.data?.v1.dex ?? []).map((dex) => (
+                  <option key={String(dex.id)} value={Number(dex.id)}>
+                    {dex.name || `DEX ${dex.id}`}
                   </option>
                 ))}
               </select>
             </Field>
-            {(env.data?.v2.configs.length ?? 0) > 1 ? (
-              <Field label="Launch config">
-                <select value={configId} onChange={(e) => setConfigId(Number(e.target.value))} className="field">
-                  {(env.data?.v2.configs ?? []).map((config) => (
-                    <option key={String(config.id)} value={Number(config.id)}>
-                      Config {String(config.id)} · fee {Number(config.curveFeeBps) / 100}%
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            ) : null}
-            <CreatorCommission
-              value={Math.min(maxCreatorTaxBps, creatorTaxBps)}
-              maxBps={maxCreatorTaxBps}
-              curveFeeBps={curveFeeBps}
-              onChange={setCreatorTaxBps}
-            />
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={buybackEnabled} onChange={(e) => setBuybackEnabled(e.target.checked)} />
-              Enable five-year buyback vest
-            </label>
+            <Field label="Optional atomic first buy (ETH)">
+              <input value={initialBuy} onChange={(e) => setInitialBuy(e.target.value)} className="field" placeholder="0.0" />
+            </Field>
+            <Field label="Creator / fee recipient (optional)">
+              <input value={feeWallet} onChange={(e) => setFeeWallet(e.target.value)} className="field" placeholder={address ?? "0x…"} />
+            </Field>
           </>
-        ) : (
-          <Field label="DEX profile">
-            <select value={dexId} onChange={(e) => setDexId(Number(e.target.value))} className="field">
-              {(env.data?.v1.dex ?? []).map((dex) => (
-                <option key={String(dex.id)} value={Number(dex.id)}>
-                  {dex.name || `DEX ${dex.id}`}
-                </option>
-              ))}
-            </select>
-          </Field>
         )}
 
-        <Field label={generation === "v2" ? "Optional first buy (ETH for native pairs)" : "Optional atomic first buy (ETH)"}>
-          <input value={initialBuy} onChange={(e) => setInitialBuy(e.target.value)} className="field" placeholder="0.0" />
-        </Field>
-        <Field label="Creator / fee recipient (optional)">
-          <input value={feeWallet} onChange={(e) => setFeeWallet(e.target.value)} className="field" placeholder={address ?? "0x…"} />
-        </Field>
-
         <p className="text-sm text-[var(--muted)]">
-          Launch fee {formatAmount(generation === "v2" ? env.data?.v2.launchFee : env.data?.v1.launchFee, 18, 4)} ETH
+          {pair.symbol} pair · launch fee {PLATFORM_FEE_ETH} ETH
           {generation === "v2" && !env.data?.v2.launchEnabled ? " · V2 gate is closed" : ""}
-          {generation === "v1" && !env.data?.v1.launchEnabled ? " · V1 public launches are currently closed" : ""}
         </p>
-        <button
-          disabled={!canSubmit}
-          className="btn-primary h-12 w-full rounded-2xl disabled:opacity-40"
-        >
-          {isPending ? "Waiting for wallet" : "Preview & launch"}
+        <button disabled={!canSubmit} className="btn-primary h-12 w-full rounded-full text-base">
+          {!isConnected ? "Connect wallet" : isPending ? "Waiting for wallet" : `Launch · ${PLATFORM_FEE_ETH} ETH`}
         </button>
         {status ? <p className="text-sm text-[var(--muted)]">{status}</p> : null}
       </form>
-      <TokenPreview
-        name={name}
-        symbol={symbol}
-        description={description}
-        image={preview}
-        pairToken={generation === "v2" ? pairToken : ZERO_ADDRESS}
-        generation={generation}
-        creatorTaxBps={generation === "v2" ? creatorTaxBps : 0}
-        buybackEnabled={generation === "v2" && buybackEnabled}
-        supplyLabel={supplyLabel}
-        animated={animated}
-      />
+      <div className="bg-[#f6f6f6] p-6 dark:bg-black/20 md:p-8">
+        <TokenPreview
+          name={name}
+          symbol={symbol}
+          description={description}
+          image={preview}
+          pairToken={generation === "v2" ? pairToken : ZERO_ADDRESS}
+          creatorTaxBps={generation === "v2" ? creatorTaxBps : 0}
+          buybackEnabled={generation === "v2" && buybackEnabled}
+          supplyLabel={supplyLabel}
+          animated={animated}
+          curveFeeBps={generation === "v2" ? curveFeeBps : 0}
+          graduationLabel={graduationLabel}
+        />
+      </div>
     </div>
   );
 }

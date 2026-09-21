@@ -1,9 +1,10 @@
 "use client";
 
-import { pairSymbol } from "@/lib/contracts/addresses";
+import { pairInfo } from "@/lib/contracts/addresses";
 import type { Address } from "viem";
 import { formatBps } from "@/lib/format";
 import { TokenLogo } from "./token-logo";
+import { PLATFORM_FEE_ETH } from "@/lib/brand";
 
 export function TokenPreview({
   name,
@@ -11,62 +12,56 @@ export function TokenPreview({
   description,
   image,
   pairToken,
-  generation,
   creatorTaxBps,
   buybackEnabled,
   supplyLabel,
   animated,
+  curveFeeBps,
+  graduationLabel,
 }: {
   name: string;
   symbol: string;
   description: string;
   image: string;
   pairToken: Address;
-  generation: "v1" | "v2";
   creatorTaxBps: number;
   buybackEnabled: boolean;
   supplyLabel: string;
   animated?: boolean;
+  curveFeeBps: number;
+  graduationLabel: string;
 }) {
+  const pair = pairInfo(pairToken);
   return (
-    <aside className="glass overflow-hidden rounded-[28px]">
+    <aside className="rounded-[28px] bg-white p-5 shadow-sm dark:bg-[var(--panel)]">
       {image ? (
-        <TokenLogo src={image} alt={name || "Token preview"} size="xl" className="rounded-none" />
+        <TokenLogo src={image} alt={name || "Token preview"} size="lg" />
       ) : (
-        <div className="grid aspect-square w-full place-items-center bg-white/5 text-sm text-[var(--muted)]">
-          Token art
-        </div>
+        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[#f3f3f3] text-[var(--muted)]">▣</div>
       )}
-      <div className="p-5">
-        <p className="section-kicker">Preview</p>
-        <div className="mt-2 flex items-center gap-2">
-          <h3 className="font-[family-name:var(--font-display)] text-2xl tracking-tight">{name || "Untitled"}</h3>
-          {animated ? <span className="chip chip-active">GIF</span> : null}
-        </div>
-        <p className="text-[var(--muted)]">${symbol || "TICKER"}</p>
-        <p className="mt-3 line-clamp-4 text-sm text-[var(--muted)]">
-          {description || "Your story shows up here before you launch."}
-        </p>
-        <dl className="mt-4 grid grid-cols-2 gap-2 text-xs">
-          <div className="rounded-2xl bg-white/5 p-3">
-            <dt className="text-[var(--muted)]">Generation</dt>
-            <dd>{generation.toUpperCase()}</dd>
-          </div>
-          <div className="rounded-2xl bg-white/5 p-3">
-            <dt className="text-[var(--muted)]">Quote</dt>
-            <dd>{pairSymbol(pairToken)}</dd>
-          </div>
-          <div className="rounded-2xl bg-white/5 p-3">
-            <dt className="text-[var(--muted)]">Supply</dt>
-            <dd>{supplyLabel}</dd>
-          </div>
-          <div className="rounded-2xl bg-white/5 p-3">
-            <dt className="text-[var(--muted)]">Creator commission</dt>
-            <dd>{formatBps(creatorTaxBps)}</dd>
-          </div>
-        </dl>
-        {buybackEnabled ? <p className="mt-3 text-xs text-[#5eead4]">Buybacks vest for 5 years</p> : null}
-      </div>
+      <h3 className="mt-4 font-[family-name:var(--font-display)] text-2xl tracking-tight">{name || "Your token"}</h3>
+      <p className="text-[var(--muted)]">
+        ${symbol || "ticker"} {animated ? "· GIF" : ""}
+      </p>
+      <p className="mt-3 line-clamp-3 text-sm text-[var(--muted)]">{description}</p>
+      <dl className="mt-5 space-y-2 text-sm">
+        <Row label="Launch fee" value={`${PLATFORM_FEE_ETH} ETH`} />
+        <Row label="Paired with" value={pair.symbol} />
+        <Row label="Trade fee" value={formatBps(curveFeeBps + creatorTaxBps)} />
+        <Row label="Graduation" value={graduationLabel} />
+        <Row label="Supply" value={supplyLabel} />
+        <Row label="Liquidity" value="Locked" />
+        {buybackEnabled ? <Row label="Buybacks" value="5-year vest" /> : null}
+      </dl>
     </aside>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] py-2 last:border-b-0">
+      <dt className="text-[var(--muted)]">{label}</dt>
+      <dd className="font-medium">{value}</dd>
+    </div>
   );
 }

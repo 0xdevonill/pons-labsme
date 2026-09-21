@@ -23,22 +23,22 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: `${APP_NAME} — Token market on Robinhood Chain`,
+    default: `${APP_NAME} — Launch on Robinhood Chain`,
     template: `%s · ${APP_NAME}`,
   },
   description: APP_DESCRIPTION,
-  icons: { icon: "/logo.svg" },
+  icons: { icon: "/logo.png" },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#08090d",
+  themeColor: "#f3f3f3",
   width: "device-width",
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" className="light" suppressHydrationWarning>
       <body className={`${jakarta.variable} ${outfit.variable} ${geistMono.variable} antialiased`}>
         <Providers>
           <Shell>{children}</Shell>
