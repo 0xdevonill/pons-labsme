@@ -18,7 +18,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
-    const stored = window.localStorage.getItem("pons-theme") as Theme | null;
+    const stored = (window.localStorage.getItem("helix-theme") ?? window.localStorage.getItem("pons-theme")) as Theme | null;
     const initial =
       stored === "light" || stored === "dark"
         ? stored
@@ -33,7 +33,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
     document.documentElement.classList.toggle("light", theme === "light");
-    window.localStorage.setItem("pons-theme", theme);
+    window.localStorage.setItem("helix-theme", theme);
   }, [theme]);
 
   const value = useMemo(

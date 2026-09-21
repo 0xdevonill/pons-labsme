@@ -1,6 +1,6 @@
-# Pons frontend
+# Helix frontend
 
-Production frontend for the live **Pons V1 & V2** contracts on Robinhood Chain. Solidity in this repository is not modified, replaced, or redeployed.
+Production frontend for the live **Pons V1 & V2** contracts on Robinhood Chain. The product name is **Helix**. Solidity in this repository is not modified, replaced, or redeployed. Pons contact and contract addresses stay the same.
 
 Stack: **Next.js 15 · TypeScript · Tailwind CSS · Wagmi · Viem**
 
@@ -8,15 +8,19 @@ Stack: **Next.js 15 · TypeScript · Tailwind CSS · Wagmi · Viem**
 
 - Robinhood Network wallet connection (injected / Robinhood Wallet / WalletConnect)
 - Create Token (V2 bonding curve or V1 Uniswap V3)
-- PNG, GIF, animated WebP, JPG uploads
+- PNG, GIF, animated WebP, JPG uploads — animation is preserved
 - Automatic IPFS pin + generated `metadata.json`
 - Metadata URI written to the on-chain `logo` field
+- Pons Market-style creator commission (V2 creator tax, capped on-chain)
+- Contained token logos that do not overflow cards
 - Token preview before launch
 - Explore + search/filter
 - My Tokens
 - Bonding curve progress and graduation status
 - Curve trade panel + transaction history
-- Dark / light glassmorphism UI
+- Dark / light UI
+- English-only interface
+- Contact: [contact@ponsfamily.com](mailto:contact@ponsfamily.com) · [ponsfamily.com](https://ponsfamily.com) · [@ponsdotfamily](https://x.com/ponsdotfamily)
 
 ## Local development
 
@@ -60,3 +64,4 @@ Configs, fees, pair-token approvals, and DEX profiles are read on-chain at runti
 - Optional first buy uses `PonsV2LaunchAndBuy` (`launchAndBuy`).
 - V1 public launches may be gated (`launchEnabled`). The UI still targets the live factory.
 - Graduated V2 tokens trade on Uniswap V4 via `PonsV2MemeHook`; the curve panel closes after graduation.
+- Creator commission is `creatorTaxBps` on the live factory, capped by `maxCreatorTaxBps()`.

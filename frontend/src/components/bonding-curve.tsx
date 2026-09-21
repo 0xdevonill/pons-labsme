@@ -29,7 +29,7 @@ export function BondingCurveProgress({
       </div>
       <div className="h-3 overflow-hidden rounded-full bg-white/10">
         <div
-          className={cn("h-full rounded-full bg-gradient-to-r from-[#7dffc3] via-[#b7f0d6] to-[#e4c56a] transition-all")}
+          className={cn("h-full rounded-full bg-gradient-to-r from-[#5eead4] via-[#9fd4ff] to-[#d4af67] transition-all")}
           style={{ width: `${pct}%` }}
         />
       </div>

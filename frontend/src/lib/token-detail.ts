@@ -15,6 +15,7 @@ import {
 import { emptySocials, type GraduationPhase, type TokenMeta, type V1Launch, type V2Launch } from "./types";
 import { graduationProgress } from "./quote";
 import { makeRpcClient, withRetries } from "./rpc";
+import { resolveLogoSrc } from "./ipfs";
 
 export type TokenDetail = {
   generation: "v1" | "v2";
@@ -34,6 +35,7 @@ export type TokenDetail = {
   phase: GraduationPhase;
   pairDecimals: number;
   threshold?: bigint;
+  imageSrc: string;
 };
 
 function asMeta(info: readonly unknown[], name: string, symbol: string): TokenMeta {
@@ -82,10 +84,11 @@ export async function loadTokenDetail(address: Address): Promise<TokenDetail> {
             .catch(() => 0n),
         ]);
 
+      const meta = asMeta(info as readonly unknown[], name, symbol);
       return {
         generation: "v2",
         launch: v2,
-        meta: asMeta(info as readonly unknown[], name, symbol),
+        meta,
         quoteReserve: curveState[0],
         tokenReserve: curveState[1],
         realQuote,
@@ -99,6 +102,7 @@ export async function loadTokenDetail(address: Address): Promise<TokenDetail> {
         progress: graduationProgress(realQuote, v2.graduationThreshold),
         phase: v2.phase as GraduationPhase,
         pairDecimals: pairDecimals(v2.pairToken),
+        imageSrc: await resolveLogoSrc(meta.logo).catch(() => meta.logo),
       };
     }
 
@@ -110,7 +114,7 @@ export async function loadTokenDetail(address: Address): Promise<TokenDetail> {
     })) as V1Launch;
 
     if (!v1.exists) {
-      throw new Error("Token is not a Pons launch");
+      throw new Error("Token is not a live launch");
     }
 
     const [info, name, symbol, graduation] = await Promise.all([
@@ -125,10 +129,11 @@ export async function loadTokenDetail(address: Address): Promise<TokenDetail> {
       }) as Promise<readonly [bigint, bigint, boolean]>,
     ]);
 
+    const meta = asMeta(info as readonly unknown[], name, symbol);
     return {
       generation: "v1",
       launch: v1,
-      meta: asMeta(info as readonly unknown[], name, symbol),
+      meta,
       quoteReserve: 0n,
       tokenReserve: 0n,
       realQuote: graduation[0],
@@ -143,6 +148,7 @@ export async function loadTokenDetail(address: Address): Promise<TokenDetail> {
       phase: (graduation[2] ? 2 : 0) as GraduationPhase,
       pairDecimals: 18,
       threshold: graduation[1],
+      imageSrc: await resolveLogoSrc(meta.logo).catch(() => meta.logo),
     };
   });
 }

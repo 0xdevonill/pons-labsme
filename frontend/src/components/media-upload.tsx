@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ACCEPTED_MEDIA_LABEL, isAllowedMediaFile, sniffMediaType, MAX_MEDIA_BYTES } from "@/lib/ipfs";
+import { ACCEPTED_MEDIA_LABEL, detectAnimation, isAllowedMediaFile, sniffMediaType, MAX_MEDIA_BYTES } from "@/lib/ipfs";
+import { TokenLogo } from "./token-logo";
 
 export function MediaUpload({
   file,
   onChange,
 }: {
   file: File | null;
-  onChange: (file: File | null, preview: string) => void;
+  onChange: (file: File | null, preview: string, animated: boolean) => void;
 }) {
   const [preview, setPreview] = useState("");
   const [error, setError] = useState("");
+  const [animated, setAnimated] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -21,17 +23,18 @@ export function MediaUpload({
 
   async function handle(next: File | null) {
     setError("");
+    setAnimated(false);
     if (!next) {
       setPreview("");
-      onChange(null, "");
+      onChange(null, "", false);
       return;
     }
     if (next.size > MAX_MEDIA_BYTES) {
-      setError("Max file size is 4 MB.");
+      setError("Max file size is 8 MB.");
       return;
     }
     if (!isAllowedMediaFile(next)) {
-      setError(`Use ${ACCEPTED_MEDIA_LABEL}.`);
+      setError(`Use ${ACCEPTED_MEDIA_LABEL}`);
       return;
     }
     const sniff = await sniffMediaType(next);
@@ -39,14 +42,16 @@ export function MediaUpload({
       setError("Could not verify image type.");
       return;
     }
+    const isAnimated = await detectAnimation(next);
     const url = URL.createObjectURL(next);
     setPreview(url);
-    onChange(next, url);
+    setAnimated(isAnimated);
+    onChange(next, url, isAnimated);
   }
 
   return (
     <label
-      className="glass flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-3xl border-dashed p-4 text-center"
+      className="glass flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-[28px] border-dashed p-4 text-center"
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         e.preventDefault();
@@ -54,12 +59,14 @@ export function MediaUpload({
       }}
     >
       {preview ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={preview} alt="Token art" className="h-32 w-32 rounded-2xl object-cover" />
+        <div className="flex flex-col items-center">
+          <TokenLogo src={preview} alt="Token art preview" size="lg" />
+          {animated ? <span className="chip chip-active mt-3">Animated art detected</span> : null}
+        </div>
       ) : (
         <>
           <p className="font-medium">Drop token art</p>
-          <p className="mt-1 text-xs text-[var(--muted)]">{ACCEPTED_MEDIA_LABEL}</p>
+          <p className="mt-1 max-w-sm text-xs leading-5 text-[var(--muted)]">{ACCEPTED_MEDIA_LABEL}</p>
         </>
       )}
       <input

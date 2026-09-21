@@ -21,7 +21,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ address: s
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load token";
-    const status = message.includes("not a Pons launch") ? 404 : 502;
+    const status = message.includes("not a live launch") ? 404 : 502;
     return NextResponse.json({ error: message }, { status });
   }
 }

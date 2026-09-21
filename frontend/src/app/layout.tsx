@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Plus_Jakarta_Sans, Syne } from "next/font/google";
+import { Geist_Mono, Outfit, Plus_Jakarta_Sans } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { Shell } from "@/components/shell";
+import { APP_DESCRIPTION, APP_NAME } from "@/lib/brand";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -9,10 +10,10 @@ const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
 });
 
-const syne = Syne({
-  variable: "--font-syne",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: ["500", "600", "700"],
 });
 
 const geistMono = Geist_Mono({
@@ -22,16 +23,15 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Pons — Launch on Robinhood Chain",
-    template: "%s · Pons",
+    default: `${APP_NAME} — Token market on Robinhood Chain`,
+    template: `%s · ${APP_NAME}`,
   },
-  description:
-    "Create, trade, and graduate tokens on the official Pons V1 & V2 contracts. Bonding curves, locked liquidity, Robinhood Chain.",
-  icons: { icon: "/logo.png" },
+  description: APP_DESCRIPTION,
+  icons: { icon: "/logo.svg" },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#05070d",
+  themeColor: "#08090d",
   width: "device-width",
   initialScale: 1,
 };
@@ -39,7 +39,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${jakarta.variable} ${syne.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${jakarta.variable} ${outfit.variable} ${geistMono.variable} antialiased`}>
         <Providers>
           <Shell>{children}</Shell>
         </Providers>

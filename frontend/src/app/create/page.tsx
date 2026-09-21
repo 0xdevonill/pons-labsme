@@ -7,10 +7,11 @@ export const metadata = {
 export default function CreatePage() {
   return (
     <div>
-      <h1 className="font-[family-name:var(--font-display)] text-3xl md:text-4xl">Create token</h1>
+      <p className="section-kicker">Launch</p>
+      <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl tracking-tight md:text-4xl">Create token</h1>
       <p className="mt-2 mb-6 max-w-2xl text-[var(--muted)]">
-        Art uploads to IPFS, metadata.json is generated automatically, and the metadata URI is stored on-chain.
-        Preview the card before you sign.
+        Upload still or animated art to IPFS. Metadata.json is generated automatically, the metadata URI is stored
+        on-chain, and you can set creator commission the same way Pons Market does.
       </p>
       <CreateForm />
     </div>

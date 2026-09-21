@@ -213,7 +213,7 @@ export function TradePanel({
       <button
         disabled={isPending || parsed === 0n}
         onClick={submit}
-        className="mt-4 h-12 w-full rounded-2xl bg-[#7dffc3] font-semibold text-[#042015] disabled:opacity-50"
+        className="btn-primary mt-4 h-12 w-full rounded-2xl disabled:opacity-50"
       >
         {isPending ? "Confirm in wallet" : side === "buy" ? "Buy" : "Sell"}
       </button>

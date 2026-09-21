@@ -7,7 +7,7 @@ export function GraduationBadge({ phase, graduated }: { phase: GraduationPhase; 
     <span
       className={cn(
         "rounded-full px-3 py-1 text-xs",
-        phase === 2 || graduated ? "bg-[#7dffc3]/20 text-[#147a4e]" : "bg-white/10",
+        phase === 2 || graduated ? "bg-[#5eead4]/20 text-[#147a4e]" : "bg-white/10",
         phase === 1 && "bg-amber-400/20",
         phase === 3 && "bg-rose-400/20",
       )}

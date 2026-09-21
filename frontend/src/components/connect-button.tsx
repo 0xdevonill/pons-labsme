@@ -26,7 +26,7 @@ export function ConnectButton() {
             wrong && "border-amber-400/60",
           )}
         >
-          <span className="h-2 w-2 rounded-full bg-[#7dffc3]" />
+          <span className="h-2 w-2 rounded-full bg-[#5eead4]" />
           {shorten(address)}
           <ChevronDown size={14} />
         </button>
