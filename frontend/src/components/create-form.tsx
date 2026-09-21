@@ -315,7 +315,7 @@ export function CreateForm() {
 
         <p className="text-sm text-[var(--muted)]">
           {pair.symbol} pair · launch fee {PLATFORM_FEE_ETH} ETH
-          {generation === "v2" && !env.data?.v2.launchEnabled ? " · V2 gate is closed" : ""}
+          {generation === "v2" && env.data && !env.data.v2.launchEnabled ? " · V2 gate is closed" : ""}
         </p>
         <button disabled={!canSubmit} className="btn-primary h-12 w-full rounded-full text-base">
           {!isConnected ? "Connect wallet" : isPending ? "Waiting for wallet" : `Launch · ${PLATFORM_FEE_ETH} ETH`}
