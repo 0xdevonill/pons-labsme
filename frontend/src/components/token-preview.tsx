@@ -30,7 +30,13 @@ export function TokenPreview({
 }) {
   return (
     <aside className="glass overflow-hidden rounded-[28px]">
-      <TokenLogo src={image} alt={name || "Token preview"} size="xl" className="rounded-none" />
+      {image ? (
+        <TokenLogo src={image} alt={name || "Token preview"} size="xl" className="rounded-none" />
+      ) : (
+        <div className="grid aspect-square w-full place-items-center bg-white/5 text-sm text-[var(--muted)]">
+          Token art
+        </div>
+      )}
       <div className="p-5">
         <p className="section-kicker">Preview</p>
         <div className="mt-2 flex items-center gap-2">
