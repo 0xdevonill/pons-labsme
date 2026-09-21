@@ -23,7 +23,7 @@ export function useTokenDetail(address?: Address) {
             return { error: res.statusText };
           }
         })();
-        throw new Error(body.error || "Token not found on Pons factories.");
+        throw new Error(body.error || "Token not found on the live launch factories.");
       }
       return parseBigints<TokenDetail>(text);
     },

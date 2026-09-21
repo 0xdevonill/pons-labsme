@@ -9,7 +9,8 @@ export default function ExplorePage() {
 
   return (
     <div>
-      <h1 className="font-[family-name:var(--font-display)] text-3xl md:text-4xl">Explore tokens</h1>
+      <p className="section-kicker">Market</p>
+      <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl tracking-tight md:text-4xl">Explore tokens</h1>
       <p className="mt-2 mb-6 max-w-2xl text-[var(--muted)]">
         Indexed from TokenLaunched on the live V1 and V2 factories. Search by ticker, creator, or contract.
       </p>

@@ -92,15 +92,16 @@ export function SearchFilters({ launches }: { launches: LaunchRecord[] }) {
           {named.map((launch) => {
             const extra = meta.data?.[launch.token.toLowerCase()];
             return (
-              <TokenCard
-                key={launch.token}
-                launch={launch}
-                name={extra?.name}
-                symbol={extra?.symbol}
-                logo={extra?.logo}
-                progress={extra?.progress}
-                phaseLabel={extra?.phaseLabel}
-              />
+                <TokenCard
+                  key={launch.token}
+                  launch={launch}
+                  name={extra?.name}
+                  symbol={extra?.symbol}
+                  logo={extra?.logo}
+                  image={extra?.image}
+                  progress={extra?.progress}
+                  phaseLabel={extra?.phaseLabel}
+                />
             );
           })}
         </div>

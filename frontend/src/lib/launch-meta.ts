@@ -5,11 +5,13 @@ import { V2_FACTORY } from "./contracts/addresses";
 import { PHASE_LABEL, type GraduationPhase } from "./types";
 import { graduationProgress } from "./quote";
 import { makeRpcClient, withRetries } from "./rpc";
+import { resolveLogoSrc } from "./ipfs";
 
 export type LaunchExtra = {
   name: string;
   symbol: string;
   logo: string;
+  image: string;
   description: string;
   progress: number;
   phaseLabel: string;
@@ -74,11 +76,19 @@ export async function loadLaunchMeta(launches: LaunchRecord[]): Promise<Record<s
         name: nameRes.status === "success" ? String(nameRes.result) : "",
         symbol: symbolRes.status === "success" ? String(symbolRes.result) : "",
         logo: info && typeof info[1] === "string" ? info[1] : "",
+        image: "",
         description: info && typeof info[2] === "string" ? info[2] : "",
         progress,
         phaseLabel,
       };
     }
+
+    await Promise.all(
+      Object.values(extras).map(async (extra) => {
+        if (!extra.logo) return;
+        extra.image = await resolveLogoSrc(extra.logo).catch(() => extra.logo);
+      }),
+    );
 
     return extras;
   });

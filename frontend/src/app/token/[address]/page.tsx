@@ -1,18 +1,19 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use } from "react";
 import Link from "next/link";
 import { useAccount, useWriteContract } from "wagmi";
 import { isAddress, type Address } from "viem";
+import { useState } from "react";
 import { useTokenDetail } from "@/hooks/useTokenDetail";
 import { BondingCurveProgress } from "@/components/bonding-curve";
 import { GraduationBadge } from "@/components/graduation-badge";
 import { TradePanel } from "@/components/trade-panel";
 import { TxHistory } from "@/components/tx-history";
+import { TokenLogo } from "@/components/token-logo";
 import { explorerAddress, explorerToken, pairDecimals, pairSymbol, V2_FACTORY } from "@/lib/contracts/addresses";
 import { v2FactoryAbi } from "@/lib/contracts/abis";
 import { formatAmount, formatBps, shorten } from "@/lib/format";
-import { ipfsToHttp, resolveLogoSrc } from "@/lib/ipfs";
 import { PHASE_LABEL, type V1Launch, type V2Launch } from "@/lib/types";
 
 export default function TokenPage({ params }: { params: Promise<{ address: string }> }) {
@@ -21,19 +22,12 @@ export default function TokenPage({ params }: { params: Promise<{ address: strin
   const detail = useTokenDetail(token);
   const { address: wallet } = useAccount();
   const { writeContractAsync, isPending } = useWriteContract();
-  const [logo, setLogo] = useState("");
   const [note, setNote] = useState("");
-
-  useEffect(() => {
-    const uri = detail.data?.meta.logo;
-    if (!uri) return;
-    resolveLogoSrc(uri).then(setLogo).catch(() => setLogo(ipfsToHttp(uri)));
-  }, [detail.data?.meta.logo]);
 
   if (!token) return <p>Invalid token address.</p>;
   if (detail.isLoading) return <div className="glass shimmer h-96 rounded-[32px]" />;
   if (detail.error || !detail.data) {
-    return <p className="text-[var(--muted)]">{detail.error?.message || "Token not found on Pons factories."}</p>;
+    return <p className="text-[var(--muted)]">{detail.error?.message || "Token not found on the live launch factories."}</p>;
   }
 
   const data = detail.data;
@@ -45,15 +39,10 @@ export default function TokenPage({ params }: { params: Promise<{ address: strin
   return (
     <div className="space-y-6">
       <div className="glass flex flex-col gap-5 rounded-[32px] p-5 md:flex-row">
-        <div className="h-28 w-28 overflow-hidden rounded-3xl bg-white/10">
-          {logo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logo} alt="" className="h-full w-full object-cover" />
-          ) : null}
-        </div>
+        <TokenLogo src={data.imageSrc} uri={data.meta.logo} alt={data.meta.name} size="lg" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="font-[family-name:var(--font-display)] text-3xl">{data.meta.name}</h1>
+            <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-tight">{data.meta.name}</h1>
             <GraduationBadge phase={data.phase} graduated={data.graduated} />
             <span className="rounded-full bg-white/10 px-3 py-1 text-xs uppercase">{data.generation}</span>
           </div>
@@ -104,7 +93,7 @@ export default function TokenPage({ params }: { params: Promise<{ address: strin
           <h3 className="font-[family-name:var(--font-display)] text-lg">Market details</h3>
           <Row label="Quote asset" value={pairSymbol(pair)} />
           <Row label="Trade fee" value={formatBps(data.feeBps)} />
-          <Row label="Creator tax" value={formatBps(data.creatorTaxBps)} />
+          <Row label="Creator commission" value={formatBps(data.creatorTaxBps)} />
           {data.generation === "v2" ? (
             <Row label="Sellable on curve" value={formatAmount(data.sellable, 18, 2)} />
           ) : (
@@ -123,7 +112,7 @@ export default function TokenPage({ params }: { params: Promise<{ address: strin
                   .then(() => setNote("Graduation seed submitted."))
                   .catch((error) => setNote(error instanceof Error ? error.message : "Failed"))
               }
-              className="h-11 w-full rounded-2xl bg-[#e4c56a] font-semibold text-[#2a2108]"
+              className="h-11 w-full rounded-2xl bg-[#d4af67] font-semibold text-[#2a2108]"
             >
               Complete graduation
             </button>
@@ -147,7 +136,7 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <span className="text-[var(--muted)]">{label}</span>
-      <span>{value}</span>
+      <span className="min-w-0 truncate text-right">{value}</span>
     </div>
   );
 }

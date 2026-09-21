@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "gateway.pinata.cloud" },
       { protocol: "https", hostname: "*.mypinata.cloud" },
       { protocol: "https", hostname: "w3s.link" },
+      { protocol: "https", hostname: "dweb.link" },
+      { protocol: "https", hostname: "nftstorage.link" },
+      { protocol: "https", hostname: "arweave.net" },
     ],
   },
 };

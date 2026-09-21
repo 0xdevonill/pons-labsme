@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ACCEPTED_MEDIA, MAX_MEDIA_BYTES } from "@/lib/ipfs";
+import {
+  ACCEPTED_MEDIA,
+  MAX_MEDIA_BYTES,
+  detectAnimationBytes,
+  extensionForMime,
+  sniffBytes,
+} from "@/lib/ipfs";
 
 export const runtime = "nodejs";
 
@@ -36,24 +42,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing image file" }, { status: 400 });
   }
   if (file.size > MAX_MEDIA_BYTES) {
-    return NextResponse.json({ error: "File too large (max 4MB)" }, { status: 400 });
+    return NextResponse.json({ error: "File too large (max 8MB)" }, { status: 400 });
   }
   if (!Object.keys(ACCEPTED_MEDIA).includes(file.type) && !/\.(png|jpe?g|gif|webp)$/i.test(file.name)) {
     return NextResponse.json({ error: "Only PNG, GIF, animated WebP and JPG are allowed" }, { status: 400 });
   }
 
   try {
-    const imageCid = await pinFile(file.name || "image", file, jwt, file.type || "application/octet-stream");
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const mime = sniffBytes(bytes) ?? file.type ?? "application/octet-stream";
+    if (!mime.startsWith("image/")) {
+      return NextResponse.json({ error: "Could not verify image type." }, { status: 400 });
+    }
+    const animated = detectAnimationBytes(bytes, mime, file.name);
+    const filename = `logo.${extensionForMime(mime, file.name)}`;
+    const imageBlob = new Blob([bytes], { type: mime });
+    const imageCid = await pinFile(filename, imageBlob, jwt, mime);
     const imageUri = `ipfs://${imageCid}`;
     const parsed = metadataRaw ? JSON.parse(String(metadataRaw)) : {};
     const metadata = {
       ...parsed,
       image: imageUri,
+      animation_url: animated ? imageUri : parsed.animation_url,
+      properties: {
+        ...(parsed.properties ?? {}),
+        animation: animated ? "true" : "false",
+        mime,
+      },
     };
     const metadataBlob = new Blob([JSON.stringify(metadata, null, 2)], { type: "application/json" });
     const metadataCid = await pinFile("metadata.json", metadataBlob, jwt, "application/json");
     const metadataUri = `ipfs://${metadataCid}`;
-    return NextResponse.json({ imageUri, metadataUri, imageCid, metadataCid });
+    return NextResponse.json({ imageUri, metadataUri, imageCid, metadataCid, animated, mime });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "IPFS upload failed" },

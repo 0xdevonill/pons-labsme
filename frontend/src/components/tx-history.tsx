@@ -72,7 +72,7 @@ export function TxHistory({
             rel="noreferrer"
             className="flex items-center justify-between rounded-2xl bg-white/5 px-3 py-2 text-sm"
           >
-            <span className={row.side === "buy" ? "text-[#7dffc3]" : "text-amber-300"}>{row.side}</span>
+            <span className={row.side === "buy" ? "text-[#5eead4]" : "text-amber-300"}>{row.side}</span>
             <span>{formatAmount(row.tokens, 18, 3)} tok</span>
             <span>
               {formatAmount(row.quote, decimals, 4)} {pairSymbol(pairToken)}

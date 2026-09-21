@@ -7,6 +7,7 @@ import { encodeAbiParameters, keccak256, parseEther, toHex, zeroAddress, type Ad
 import { useLaunchEnvironment } from "@/hooks/useLaunchEnvironment";
 import { MediaUpload } from "./media-upload";
 import { TokenPreview } from "./token-preview";
+import { CreatorCommission } from "./creator-commission";
 import { buildMetadata, uploadLaunchMedia } from "@/lib/ipfs";
 import { V1_FACTORY, V2_FACTORY, V2_LAUNCH_AND_BUY, ZERO_ADDRESS } from "@/lib/contracts/addresses";
 import { erc20Abi, v1FactoryAbi, v2FactoryAbi, v2LaunchAndBuyAbi } from "@/lib/contracts/abis";
@@ -16,6 +17,14 @@ import { emptySocials } from "@/lib/types";
 function randomSalt(): Hex {
   return toHex(crypto.getRandomValues(new Uint8Array(32)));
 }
+
+const SOCIAL_LABELS = {
+  twitter: "X / Twitter",
+  telegram: "Telegram",
+  discord: "Discord",
+  website: "Website",
+  farcaster: "Farcaster",
+} as const;
 
 export function CreateForm() {
   const router = useRouter();
@@ -31,6 +40,7 @@ export function CreateForm() {
   const [socials, setSocials] = useState(emptySocials);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
+  const [animated, setAnimated] = useState(false);
   const [pairToken, setPairToken] = useState<Address>(ZERO_ADDRESS);
   const [configId, setConfigId] = useState(0);
   const [dexId, setDexId] = useState(0);
@@ -42,6 +52,8 @@ export function CreateForm() {
 
   const v2Config = env.data?.v2.configs[configId] ?? env.data?.v2.configs[0];
   const supplyLabel = v2Config ? formatAmount(v2Config.supply, 18, 0) : "1B";
+  const maxCreatorTaxBps = Number(env.data?.v2.maxCreatorTaxBps ?? 1000);
+  const curveFeeBps = Number(v2Config?.curveFeeBps ?? 100);
 
   const canSubmit = useMemo(
     () => Boolean(name.trim() && symbol.trim() && file && isConnected && !isPending),
@@ -50,12 +62,13 @@ export function CreateForm() {
 
   async function launch() {
     if (!client || !address || !file) return;
-    setStatus("Uploading media to IPFS…");
+    setStatus("Uploading media to IPFS. Animation is kept as uploaded.");
     const imageMeta = buildMetadata({
       name: name.trim(),
       symbol: symbol.trim().toUpperCase(),
       description: description.trim(),
       imageUri: "",
+      animated,
       ...socials,
     });
     const uploaded = await uploadLaunchMedia({
@@ -93,6 +106,7 @@ export function CreateForm() {
       const salt = randomSalt();
       const fee = env.data!.v2.launchFee;
       const buy = initialBuy ? parseEther(initialBuy) : 0n;
+      const tax = Math.min(maxCreatorTaxBps, Math.max(0, Math.round(creatorTaxBps)));
       const params = {
         name: name.trim(),
         symbol: symbol.trim().toUpperCase(),
@@ -100,7 +114,7 @@ export function CreateForm() {
         description: description.trim(),
         socials: socialTuple,
         creatorFeeRecipient: (feeWallet || address) as Address,
-        creatorTaxBps,
+        creatorTaxBps: tax,
         buybackEnabled,
         expectedEconomics,
         salt,
@@ -193,30 +207,32 @@ export function CreateForm() {
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Name">
-            <input value={name} maxLength={64} onChange={(e) => setName(e.target.value)} className="field" placeholder="Pons Duck" required />
+            <input value={name} maxLength={64} onChange={(e) => setName(e.target.value)} className="field" placeholder="Helix Duck" required />
           </Field>
           <Field label="Symbol">
             <input value={symbol} maxLength={16} onChange={(e) => setSymbol(e.target.value)} className="field" placeholder="DUCK" required />
           </Field>
         </div>
         <Field label="Description">
-          <textarea value={description} maxLength={2048} onChange={(e) => setDescription(e.target.value)} className="field min-h-28" />
+          <textarea value={description} maxLength={2048} onChange={(e) => setDescription(e.target.value)} className="field min-h-28" placeholder="Tell traders what this token is about." />
         </Field>
         <MediaUpload
           file={file}
-          onChange={(next, url) => {
+          onChange={(next, url, nextAnimated) => {
             setFile(next);
             setPreview(url);
+            setAnimated(nextAnimated);
           }}
         />
         <div className="grid gap-3 sm:grid-cols-2">
           {(["twitter", "telegram", "discord", "website", "farcaster"] as const).map((key) => (
-            <Field key={key} label={key}>
+            <Field key={key} label={SOCIAL_LABELS[key]}>
               <input
                 value={socials[key]}
                 maxLength={256}
                 onChange={(e) => setSocials((s) => ({ ...s, [key]: e.target.value }))}
                 className="field"
+                placeholder={key === "website" ? "https://" : ""}
               />
             </Field>
           ))}
@@ -244,16 +260,12 @@ export function CreateForm() {
                 </select>
               </Field>
             ) : null}
-            <Field label="Creator tax (bps, max 1000)">
-              <input
-                type="number"
-                min={0}
-                max={Number(env.data?.v2.maxCreatorTaxBps ?? 1000)}
-                value={creatorTaxBps}
-                onChange={(e) => setCreatorTaxBps(Number(e.target.value))}
-                className="field"
-              />
-            </Field>
+            <CreatorCommission
+              value={Math.min(maxCreatorTaxBps, creatorTaxBps)}
+              maxBps={maxCreatorTaxBps}
+              curveFeeBps={curveFeeBps}
+              onChange={setCreatorTaxBps}
+            />
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={buybackEnabled} onChange={(e) => setBuybackEnabled(e.target.checked)} />
               Enable five-year buyback vest
@@ -285,7 +297,7 @@ export function CreateForm() {
         </p>
         <button
           disabled={!canSubmit}
-          className="h-12 w-full rounded-2xl bg-[#7dffc3] font-semibold text-[#042015] disabled:opacity-40"
+          className="btn-primary h-12 w-full rounded-2xl disabled:opacity-40"
         >
           {isPending ? "Waiting for wallet" : "Preview & launch"}
         </button>
@@ -301,6 +313,7 @@ export function CreateForm() {
         creatorTaxBps={generation === "v2" ? creatorTaxBps : 0}
         buybackEnabled={generation === "v2" && buybackEnabled}
         supplyLabel={supplyLabel}
+        animated={animated}
       />
     </div>
   );

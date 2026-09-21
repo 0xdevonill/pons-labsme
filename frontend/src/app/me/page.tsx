@@ -12,9 +12,10 @@ export default function MyTokensPage() {
 
   return (
     <div>
-      <h1 className="font-[family-name:var(--font-display)] text-3xl md:text-4xl">My tokens</h1>
+      <p className="section-kicker">Portfolio</p>
+      <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl tracking-tight md:text-4xl">My tokens</h1>
       <p className="mt-2 mb-6 text-[var(--muted)]">
-        Tokens this wallet launched on Pons V1 or V2.
+        Tokens this wallet launched on the live V1 or V2 factories.
       </p>
       {!isConnected ? (
         <div className="glass flex flex-col items-start gap-4 rounded-3xl p-8">

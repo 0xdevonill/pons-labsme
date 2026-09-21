@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Compass, Plus, User, Activity, Menu, X } from "lucide-react";
@@ -8,6 +7,9 @@ import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { ConnectButton } from "./connect-button";
 import { ThemeToggle } from "./theme-toggle";
+import { BrandMark } from "./brand-mark";
+import { SiteFooter } from "./site-footer";
+import { APP_NAME } from "@/lib/brand";
 
 const NAV = [
   { href: "/explore", label: "Explore", icon: Compass },
@@ -22,14 +24,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="relative min-h-screen">
-      <div className="pointer-events-none absolute inset-0 grid-fade opacity-40" />
-      <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-[color-mix(in_srgb,var(--bg0)_72%,transparent)] backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
-          <Link href="/" className="flex items-center gap-2.5">
-            <Image src="/logo.png" alt="Pons" width={34} height={34} className="rounded-xl" />
-            <span className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
-              Pons
-            </span>
+      <div className="pointer-events-none absolute inset-0 grid-fade opacity-30" />
+      <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-[color-mix(in_srgb,var(--bg0)_78%,transparent)] backdrop-blur-xl">
+        <div className="mx-auto flex h-[4.25rem] max-w-6xl items-center justify-between gap-3 px-4">
+          <Link href="/" aria-label={APP_NAME} className="flex items-center gap-2.5">
+            <BrandMark />
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {NAV.map((item) => {
@@ -77,7 +76,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
         ) : null}
       </header>
       <main className="relative mx-auto w-full max-w-6xl px-4 pb-28 pt-8 md:pb-16">{children}</main>
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-[var(--line)] bg-[color-mix(in_srgb,var(--bg0)_82%,transparent)] backdrop-blur-xl md:hidden">
+      <div className="relative pb-20 md:pb-0">
+        <SiteFooter />
+      </div>
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-[var(--line)] bg-[color-mix(in_srgb,var(--bg0)_86%,transparent)] backdrop-blur-xl md:hidden">
         {NAV.map((item) => {
           const active = pathname === item.href || pathname.startsWith(item.href);
           return (
