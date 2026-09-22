@@ -8,10 +8,11 @@ export const APP_DESCRIPTION =
   "Launch and explore fixed-supply tokens on Robinhood Chain. Pair against ETH, USDG, or tokenized stocks. Your wallet submits every transaction.";
 
 export const CONTACT = {
-  email: "contact@ponsfamily.com",
-  website: "https://ponsfamily.com",
-  twitter: "https://x.com/ponsdotfamily",
-  twitterHandle: "@ponsdotfamily",
+  email: "contact@fonsfamily.com",
+  website: "https://fonsfamily.com",
+  websiteLabel: "fonsfamily.com",
+  twitter: "https://x.com/fonsdotfamily",
+  twitterHandle: "@fonsdotfamily",
 } as const;
 
 export const THEME_STORAGE_KEY = "fons-theme";

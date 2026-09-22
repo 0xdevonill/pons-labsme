@@ -33,18 +33,21 @@ export function TokenPreview({
 }) {
   const pair = pairInfo(pairToken);
   return (
-    <aside className="rounded-[28px] bg-white p-5 shadow-sm dark:bg-[var(--panel)]">
+    <aside className="surface rounded-[28px] p-5">
+      <p className="section-kicker">Live preview</p>
       {image ? (
-        <TokenLogo src={image} alt={name || "Token preview"} size="lg" />
+        <TokenLogo src={image} alt={name || "Token preview"} size="lg" className="mt-4" />
       ) : (
-        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[#f3f3f3] text-[var(--muted)]">▣</div>
+        <div className="mt-4 grid h-16 w-16 place-items-center rounded-2xl bg-[color-mix(in_srgb,var(--ink)_6%,transparent)] text-[var(--muted)]">
+          ▣
+        </div>
       )}
       <h3 className="mt-4 font-[family-name:var(--font-display)] text-2xl tracking-tight">{name || "Your token"}</h3>
       <p className="text-[var(--muted)]">
         ${symbol || "ticker"} {animated ? "· GIF" : ""}
       </p>
-      <p className="mt-3 line-clamp-3 text-sm text-[var(--muted)]">{description}</p>
-      <dl className="mt-5 space-y-2 text-sm">
+      <p className="mt-3 line-clamp-3 text-sm text-[var(--muted)]">{description || "A short description will appear here."}</p>
+      <dl className="mt-5 space-y-1 text-sm">
         <Row label="Launch fee" value={`${PLATFORM_FEE_ETH} ETH`} />
         <Row label="Paired with" value={pair.symbol} />
         <Row label="Trade fee" value={formatBps(curveFeeBps + creatorTaxBps)} />
@@ -59,7 +62,7 @@ export function TokenPreview({
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] py-2 last:border-b-0">
+    <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] py-2.5 last:border-b-0">
       <dt className="text-[var(--muted)]">{label}</dt>
       <dd className="font-medium">{value}</dd>
     </div>

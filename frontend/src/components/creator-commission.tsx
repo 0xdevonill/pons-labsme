@@ -25,8 +25,8 @@ export function CreatorCommission({
         <div>
           <h3 className="text-sm font-semibold">Creator commission</h3>
           <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
-            Optional extra fee on every trade, paid to your creator wallet. Same control as Pons Market, capped at{" "}
-            {formatBps(cap)} and fixed at launch.
+            Optional extra fee on every trade, paid to your creator wallet. Capped at {formatBps(cap)} and
+            fixed at launch.
           </p>
         </div>
         <p className="font-[family-name:var(--font-mono)] text-lg font-semibold tabular-nums">

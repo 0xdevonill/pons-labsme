@@ -4,6 +4,7 @@ import { useAccount, usePublicClient, useSendTransaction, useWriteContract } fro
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { encodeAbiParameters, keccak256, parseEther, toHex, zeroAddress, type Address, type Hex } from "viem";
+import { ChevronDown, Rocket } from "lucide-react";
 import { useLaunchEnvironment } from "@/hooks/useLaunchEnvironment";
 import { MediaUpload } from "./media-upload";
 import { TokenPreview } from "./token-preview";
@@ -16,6 +17,7 @@ import { pairInfo, V1_FACTORY, V2_FACTORY, V2_LAUNCH_AND_BUY, ZERO_ADDRESS } fro
 import { erc20Abi, v1FactoryAbi, v2FactoryAbi, v2LaunchAndBuyAbi } from "@/lib/contracts/abis";
 import { formatAmount } from "@/lib/format";
 import { emptySocials } from "@/lib/types";
+import { cn } from "@/lib/cn";
 
 function randomSalt(): Hex {
   return toHex(crypto.getRandomValues(new Uint8Array(32)));
@@ -194,23 +196,28 @@ export function CreateForm() {
   }
 
   return (
-    <div className="overflow-hidden rounded-[32px] bg-white shadow-sm dark:bg-[var(--panel)] lg:grid lg:grid-cols-[minmax(0,1fr)_340px]">
+    <div className="surface overflow-hidden rounded-[32px] lg:grid lg:grid-cols-[minmax(0,1fr)_360px]">
       <form
-        className="space-y-4 p-6 md:p-8"
+        className="space-y-5 p-6 md:p-8"
         onSubmit={(e) => {
           e.preventDefault();
           launch().catch((error) => setStatus(error instanceof Error ? error.message : "Launch failed"));
         }}
       >
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-tight">Launch token</h1>
-          <div className="flex rounded-full bg-[#f3f3f3] p-1 text-sm dark:bg-white/10">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="section-kicker">New launch</p>
+            <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl tracking-tight md:text-4xl">
+              Launch token
+            </h1>
+          </div>
+          <div className="seg">
             {(["v2", "v1"] as const).map((item) => (
               <button
                 type="button"
                 key={item}
                 onClick={() => setGeneration(item)}
-                className={`rounded-full px-3 py-1 ${generation === item ? "bg-white shadow-sm dark:bg-black" : "text-[var(--muted)]"}`}
+                className={cn("seg-item uppercase", generation === item && "seg-item-active")}
               >
                 {item}
               </button>
@@ -261,11 +268,12 @@ export function CreateForm() {
             <Field label={`Developer buy (${pair.symbol})`}>
               <input value={initialBuy} onChange={(e) => setInitialBuy(e.target.value)} className="field" placeholder="0.00" />
             </Field>
-            <button type="button" onClick={() => setAdvanced((v) => !v)} className="text-sm text-[var(--muted)]">
-              Advanced {advanced ? "▴" : "▾"}
+            <button type="button" onClick={() => setAdvanced((v) => !v)} className="btn-ghost h-9 px-3 text-sm">
+              Advanced
+              <ChevronDown size={14} className={cn("transition", advanced && "rotate-180")} />
             </button>
             {advanced ? (
-              <div className="space-y-4">
+              <div className="space-y-4 rounded-3xl border border-[var(--line)] bg-[color-mix(in_srgb,var(--bg1)_55%,transparent)] p-4">
                 {(env.data?.v2.configs.length ?? 0) > 1 ? (
                   <Field label="Launch config">
                     <select value={configId} onChange={(e) => setConfigId(Number(e.target.value))} className="field">
@@ -313,16 +321,17 @@ export function CreateForm() {
           </>
         )}
 
-        <p className="text-sm text-[var(--muted)]">
+        <div className="rounded-3xl border border-[var(--line)] bg-[color-mix(in_srgb,var(--bg1)_45%,transparent)] px-4 py-3 text-sm text-[var(--muted)]">
           {pair.symbol} pair · launch fee {PLATFORM_FEE_ETH} ETH
           {generation === "v2" && env.data && !env.data.v2.launchEnabled ? " · V2 gate is closed" : ""}
-        </p>
+        </div>
         <button disabled={!canSubmit} className="btn-primary h-12 w-full rounded-full text-base">
+          <Rocket size={16} />
           {!isConnected ? "Connect wallet" : isPending ? "Waiting for wallet" : `Launch · ${PLATFORM_FEE_ETH} ETH`}
         </button>
         {status ? <p className="text-sm text-[var(--muted)]">{status}</p> : null}
       </form>
-      <div className="bg-[#f6f6f6] p-6 dark:bg-black/20 md:p-8">
+      <div className="border-t border-[var(--line)] bg-[color-mix(in_srgb,var(--bg1)_70%,transparent)] p-6 md:border-l md:border-t-0 md:p-8">
         <TokenPreview
           name={name}
           symbol={symbol}
@@ -344,7 +353,7 @@ export function CreateForm() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block text-sm">
-      <span className="mb-1 block text-[var(--muted)]">{label}</span>
+      <span className="mb-1.5 block font-medium text-[var(--muted)]">{label}</span>
       {children}
     </label>
   );

@@ -7,6 +7,7 @@ import { v2CurveAbi, erc20Abi, swapRouter02Abi, v1TokenAbi } from "@/lib/contrac
 import { ZERO_ADDRESS, V1_SWAP_ROUTER, pairDecimals, pairSymbol } from "@/lib/contracts/addresses";
 import { minOutFromRate, quoteBuy, quoteSell } from "@/lib/quote";
 import { formatAmount } from "@/lib/format";
+import { cn } from "@/lib/cn";
 
 export function TradePanel({
   generation,
@@ -167,9 +168,9 @@ export function TradePanel({
 
   if (generation === "v2" && graduated) {
     return (
-      <section className="glass rounded-3xl p-5">
+      <section className="surface rounded-[28px] p-5">
         <h3 className="font-[family-name:var(--font-display)] text-lg">Trade</h3>
-        <p className="mt-2 text-sm text-[var(--muted)]">
+        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
           This launch has graduated. Buys and sells now route through the locked Uniswap V4 pool
           (hook fee, pool fee 0).
         </p>
@@ -178,19 +179,24 @@ export function TradePanel({
   }
 
   return (
-    <section className="glass rounded-3xl p-5">
-      <div className="mb-4 flex rounded-full bg-white/10 p-1 text-sm">
+    <section className="surface rounded-[28px] p-5">
+      <div className="mb-4 flex rounded-full bg-[color-mix(in_srgb,var(--bg1)_80%,transparent)] p-1 text-sm">
         {(["buy", "sell"] as const).map((item) => (
           <button
             key={item}
             onClick={() => setSide(item)}
-            className={`flex-1 rounded-full py-2 capitalize ${side === item ? "bg-[var(--bg0)]" : ""}`}
+            className={cn(
+              "flex-1 rounded-full py-2 font-semibold capitalize",
+              side === item && item === "buy" && "bg-[#111] text-white dark:bg-[var(--lime)] dark:text-black",
+              side === item && item === "sell" && "bg-[#d4483a] text-white",
+              side !== item && "text-[var(--muted)]",
+            )}
           >
             {item}
           </button>
         ))}
       </div>
-      <label className="text-xs text-[var(--muted)]">
+      <label className="text-xs font-medium text-[var(--muted)]">
         {side === "buy" ? `Spend ${pairSymbol(pairToken)}` : "Sell tokens"}
       </label>
       <input
@@ -198,7 +204,7 @@ export function TradePanel({
         onChange={(e) => setAmount(e.target.value)}
         inputMode="decimal"
         placeholder="0.0"
-        className="mt-1 h-12 w-full rounded-2xl bg-white/10 px-4 outline-none"
+        className="field mt-1.5 h-14 text-lg"
       />
       {generation === "v2" && quoted ? (
         <p className="mt-3 text-sm text-[var(--muted)]">
@@ -213,13 +219,13 @@ export function TradePanel({
       <button
         disabled={isPending || parsed === 0n}
         onClick={submit}
-        className="btn-primary mt-4 h-12 w-full rounded-2xl disabled:opacity-50"
+        className={cn("mt-4 h-12 w-full rounded-full text-base", side === "buy" ? "btn-buy" : "btn-sell")}
       >
         {isPending ? "Confirm in wallet" : side === "buy" ? "Buy" : "Sell"}
       </button>
       {status ? <p className="mt-3 text-sm text-[var(--muted)]">{status}</p> : null}
       {generation === "v2" ? (
-        <p className="mt-3 text-[11px] text-[var(--muted)]">
+        <p className="mt-3 text-[11px] leading-5 text-[var(--muted)]">
           Quotes use on-chain reserves. Partial fills near graduation refund unused {pairSymbol(pairToken)}.
           {formatUnits(sellable, 18) ? ` Sellable: ${formatAmount(sellable, 18, 2)}.` : ""}
         </p>

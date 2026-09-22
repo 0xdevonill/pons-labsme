@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ImagePlus } from "lucide-react";
 import { ACCEPTED_MEDIA_LABEL, detectAnimation, isAllowedMediaFile, sniffMediaType, MAX_MEDIA_BYTES } from "@/lib/ipfs";
 import { TokenLogo } from "./token-logo";
 
@@ -51,7 +52,7 @@ export function MediaUpload({
 
   return (
     <label
-      className="glass flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-[28px] border-dashed p-4 text-center"
+      className="flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-[28px] border border-dashed border-[var(--line)] bg-[color-mix(in_srgb,var(--bg1)_55%,transparent)] p-4 text-center hover:border-[color-mix(in_srgb,var(--ink)_18%,transparent)] hover:bg-[var(--panel)]"
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         e.preventDefault();
@@ -65,7 +66,10 @@ export function MediaUpload({
         </div>
       ) : (
         <>
-          <p className="font-medium">Choose image</p>
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--lime)] text-black">
+            <ImagePlus size={20} />
+          </span>
+          <p className="mt-3 font-medium">Choose image</p>
           <p className="mt-1 max-w-sm text-xs leading-5 text-[var(--muted)]">{ACCEPTED_MEDIA_LABEL}</p>
         </>
       )}

@@ -53,14 +53,14 @@ export function TxHistory({
 
   if (!curve) {
     return (
-      <section className="glass rounded-3xl p-5 text-sm text-[var(--muted)]">
+      <section className="surface rounded-[28px] p-5 text-sm text-[var(--muted)]">
         V1 trades happen on Uniswap V3. Open the pool on the explorer for the full swap history.
       </section>
     );
   }
 
   return (
-    <section className="glass rounded-3xl p-5">
+    <section className="surface rounded-[28px] p-5">
       <h3 className="mb-3 font-[family-name:var(--font-display)] text-lg">Transaction history</h3>
       {query.isLoading ? <p className="text-sm text-[var(--muted)]">Loading trades…</p> : null}
       <div className="space-y-2">
@@ -70,9 +70,11 @@ export function TxHistory({
             href={explorerTx(row.hash)}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center justify-between rounded-2xl bg-white/5 px-3 py-2 text-sm"
+            className="flex items-center justify-between rounded-2xl bg-[color-mix(in_srgb,var(--bg1)_70%,transparent)] px-3 py-2.5 text-sm hover:bg-[var(--panel)]"
           >
-            <span className={row.side === "buy" ? "text-[#5eead4]" : "text-amber-300"}>{row.side}</span>
+            <span className={row.side === "buy" ? "font-semibold text-[var(--buy)]" : "font-semibold text-[var(--sell)]"}>
+              {row.side}
+            </span>
             <span>{formatAmount(row.tokens, 18, 3)} tok</span>
             <span>
               {formatAmount(row.quote, decimals, 4)} {pairSymbol(pairToken)}
@@ -85,4 +87,3 @@ export function TxHistory({
     </section>
   );
 }
-

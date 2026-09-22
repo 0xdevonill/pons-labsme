@@ -18,7 +18,7 @@ export const wagmiConfig = createConfig({
             metadata: {
               name: "Fons",
               description: "Token launchpad on Robinhood Chain",
-              url: "https://ponsfamily.com",
+              url: "https://fonsfamily.com",
               icons: ["/logo.png"],
             },
           }),

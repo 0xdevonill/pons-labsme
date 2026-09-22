@@ -68,7 +68,7 @@ export function PairAssetPicker({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="field flex h-12 items-center justify-between px-3 text-left"
+        className="field flex h-12 items-center justify-between px-3 text-left shadow-sm"
       >
         <span className="flex items-center gap-2">
           <PairDot symbol={selected.symbol} />
@@ -77,7 +77,7 @@ export function PairAssetPicker({
         <span className="text-[var(--muted)]">▾</span>
       </button>
       {open ? (
-        <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)] shadow-xl">
+        <div className="surface absolute z-30 mt-2 w-full overflow-hidden rounded-2xl">
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}

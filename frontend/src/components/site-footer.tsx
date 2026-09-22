@@ -1,47 +1,82 @@
 import Link from "next/link";
+import { Mail, Globe } from "lucide-react";
 import { APP_NAME, APP_TAGLINE, CONTACT } from "@/lib/brand";
-import { explorerAddress, V1_FACTORY, V2_FACTORY } from "@/lib/contracts/addresses";
+import { BrandMark } from "./brand-mark";
 
 export function SiteFooter() {
   return (
     <footer className="mx-auto mt-16 max-w-6xl px-4 pb-10">
-      <div className="rounded-[28px] bg-white p-8 shadow-sm dark:bg-[var(--panel)]">
-        <div className="grid gap-10 md:grid-cols-[1.3fr_0.7fr_0.7fr_1fr]">
+      <div className="surface overflow-hidden rounded-[32px] p-8 md:p-10">
+        <div className="grid gap-10 md:grid-cols-[1.4fr_0.8fr_1fr]">
           <div>
-            <p className="font-[family-name:var(--font-display)] text-3xl lowercase">{APP_NAME}</p>
-            <p className="mt-3 max-w-sm text-sm leading-6 text-[var(--muted)]">
-              {APP_TAGLINE}. Your wallet submits every transaction. {APP_NAME} does not custody assets. Settles on the
-              live Pons V1 and V2 factories.
+            <BrandMark showWordmark size={40} />
+            <p className="mt-4 max-w-sm text-sm leading-6 text-[var(--muted)]">
+              {APP_TAGLINE}. Your wallet submits every transaction. {APP_NAME} does not custody
+              assets.
             </p>
           </div>
           <div>
-            <h2 className="text-sm font-medium">Product</h2>
-            <ul className="mt-3 space-y-2 text-sm text-[var(--muted)]">
-              <li><Link href="/">Explore</Link></li>
-              <li><Link href="/create">Create</Link></li>
-              <li><Link href="/me">Profile</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h2 className="text-sm font-medium">Contact</h2>
-            <ul className="mt-3 space-y-2 text-sm text-[var(--muted)]">
-              <li><a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a></li>
-              <li><a href={CONTACT.website} target="_blank" rel="noreferrer">ponsfamily.com</a></li>
-              <li><a href={CONTACT.twitter} target="_blank" rel="noreferrer">{CONTACT.twitterHandle}</a></li>
-            </ul>
-          </div>
-          <div>
-            <h2 className="text-sm font-medium">Contracts</h2>
-            <ul className="mt-3 space-y-2 font-[family-name:var(--font-mono)] text-[11px] leading-5 text-[var(--muted)]">
+            <h2 className="text-sm font-semibold">Product</h2>
+            <ul className="mt-3 space-y-2.5 text-sm text-[var(--muted)]">
               <li>
-                V1 · <a href={explorerAddress(V1_FACTORY)} target="_blank" rel="noreferrer">{V1_FACTORY}</a>
+                <Link className="soft-link" href="/">
+                  Explore
+                </Link>
               </li>
               <li>
-                V2 · <a href={explorerAddress(V2_FACTORY)} target="_blank" rel="noreferrer">{V2_FACTORY}</a>
+                <Link className="soft-link" href="/create">
+                  Launch token
+                </Link>
+              </li>
+              <li>
+                <Link className="soft-link" href="/me">
+                  Profile
+                </Link>
+              </li>
+              <li>
+                <Link className="soft-link" href="/activity">
+                  Activity
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold">Contact</h2>
+            <ul className="mt-3 space-y-2.5 text-sm">
+              <li>
+                <a className="soft-link inline-flex items-center gap-2" href={`mailto:${CONTACT.email}`}>
+                  <Mail size={14} />
+                  {CONTACT.email}
+                </a>
+              </li>
+              <li>
+                <a
+                  className="soft-link inline-flex items-center gap-2"
+                  href={CONTACT.website}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Globe size={14} />
+                  {CONTACT.websiteLabel}
+                </a>
+              </li>
+              <li>
+                <a
+                  className="soft-link inline-flex items-center gap-2"
+                  href={CONTACT.twitter}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <span className="grid h-3.5 w-3.5 place-items-center text-[11px] font-bold">𝕏</span>
+                  {CONTACT.twitterHandle}
+                </a>
               </li>
             </ul>
           </div>
         </div>
+        <p className="mt-10 border-t border-[var(--line)] pt-5 text-xs text-[var(--muted)]">
+          © {new Date().getFullYear()} {APP_NAME}. Built for Robinhood Chain.
+        </p>
       </div>
     </footer>
   );

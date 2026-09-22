@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { Plus, Search } from "lucide-react";
 import type { LaunchRecord } from "@/lib/types";
 import { TokenCard } from "./token-card";
 import { PinnedFonsCard } from "./pinned-fons-card";
@@ -71,16 +72,19 @@ export function SearchFilters({
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-center gap-3">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search tokens"
-          className="h-12 min-w-[220px] flex-1 rounded-full bg-white px-5 text-sm shadow-sm outline-none dark:bg-[var(--panel)]"
-        />
+        <label className="relative min-w-[220px] flex-1">
+          <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)]" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search tokens"
+            className="field h-12 pl-11 shadow-sm"
+          />
+        </label>
         <select
           value={generation}
           onChange={(e) => setGeneration(e.target.value as "all" | "v1" | "v2")}
-          className="h-12 rounded-full bg-white px-4 text-sm shadow-sm dark:bg-[var(--panel)]"
+          className="field h-12 w-auto min-w-28 shadow-sm"
         >
           <option value="all">All</option>
           <option value="v2">V2</option>
@@ -89,7 +93,7 @@ export function SearchFilters({
         <select
           value={pair}
           onChange={(e) => setPair(e.target.value)}
-          className="h-12 rounded-full bg-white px-4 text-sm shadow-sm dark:bg-[var(--panel)]"
+          className="field h-12 w-auto min-w-32 shadow-sm"
         >
           {pairs.map((item) => (
             <option key={item} value={item}>
@@ -98,7 +102,8 @@ export function SearchFilters({
           ))}
         </select>
         <Link href="/create" className="btn-primary h-12 px-5">
-          + Create
+          <Plus size={16} />
+          Create
         </Link>
       </div>
       <p className="mb-4 text-sm text-[var(--muted)]">
@@ -107,13 +112,17 @@ export function SearchFilters({
       </p>
       <div className="launchpad-panel rounded-[32px] p-5 md:p-6">
         <div className="mb-5">
-          <h2 className="text-2xl font-semibold tracking-tight">Explore</h2>
-          <p className="mt-1 text-sm text-[var(--muted)]">Tokens still climbing toward graduation on Robinhood Chain.</p>
+          <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-tight">Explore</h2>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            Tokens still climbing toward graduation on Robinhood Chain.
+          </p>
         </div>
         {named.length === 0 && !pinOnThisPage ? (
-          <div className="rounded-3xl bg-white/70 p-10 text-center text-[var(--muted)]">No tokens match those filters.</div>
+          <div className="rounded-3xl bg-white/70 px-6 py-14 text-center text-[var(--muted)] dark:bg-black/20">
+            No tokens match those filters.
+          </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {pinOnThisPage ? <PinnedFonsCard /> : null}
             {named.map((launch) => {
               const extra = meta.data?.[launch.token.toLowerCase()];
@@ -134,14 +143,18 @@ export function SearchFilters({
         )}
         {pageCount > 1 ? (
           <div className="mt-6 flex items-center justify-center gap-2">
-            <button disabled={safePage === 0} onClick={() => setPage((p) => Math.max(0, p - 1))} className="rounded-full bg-white px-4 py-2 text-sm disabled:opacity-40">
+            <button
+              disabled={safePage === 0}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              className="btn-secondary h-10 px-4 text-sm disabled:opacity-40"
+            >
               Previous
             </button>
-            <span className="text-sm text-[var(--muted)]">{safePage + 1}</span>
+            <span className="min-w-10 text-center text-sm text-[var(--muted)]">{safePage + 1}</span>
             <button
               disabled={safePage >= pageCount - 1}
               onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
-              className="rounded-full bg-white px-4 py-2 text-sm disabled:opacity-40"
+              className="btn-secondary h-10 px-4 text-sm disabled:opacity-40"
             >
               Next
             </button>
