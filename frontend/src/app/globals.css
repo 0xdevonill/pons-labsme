@@ -133,6 +133,7 @@ textarea {
   border: 1px solid transparent;
   padding: 0 1rem;
   outline: none;
+  box-sizing: border-box;
 }
 
 .dark .field {
@@ -367,7 +368,7 @@ select.field {
   display: grid;
   height: 2.65rem;
   width: 2.65rem;
-  place-items-center;
+  place-items: center;
   border-radius: 999px;
   border: 1px solid var(--line);
   background: color-mix(in srgb, var(--panel) 80%, transparent);

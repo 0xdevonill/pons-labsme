@@ -3,7 +3,10 @@
 import { pairInfo } from "@/lib/contracts/addresses";
 import type { Address } from "viem";
 import { formatBps } from "@/lib/format";
+import { pairLogoSrc } from "@/lib/pair-assets";
 import { TokenLogo } from "./token-logo";
+import { PairAssetIcon } from "./pair-asset-icon";
+import { usePairAssets } from "@/hooks/usePairAssets";
 import { PLATFORM_FEE_ETH } from "@/lib/brand";
 
 export function TokenPreview({
@@ -32,6 +35,10 @@ export function TokenPreview({
   graduationLabel: string;
 }) {
   const pair = pairInfo(pairToken);
+  const catalog = usePairAssets();
+  const meta =
+    catalog.data?.byAddress.get(pair.address.toLowerCase()) ??
+    catalog.data?.bySymbol.get(pair.symbol.toUpperCase());
   return (
     <aside className="surface rounded-[28px] p-5">
       <p className="section-kicker">Live preview</p>
@@ -49,7 +56,26 @@ export function TokenPreview({
       <p className="mt-3 line-clamp-3 text-sm text-[var(--muted)]">{description || "A short description will appear here."}</p>
       <dl className="mt-5 space-y-1 text-sm">
         <Row label="Launch fee" value={`${PLATFORM_FEE_ETH} ETH`} />
-        <Row label="Paired with" value={pair.symbol} />
+        <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] py-2.5">
+          <dt className="text-[var(--muted)]">Paired with</dt>
+          <dd className="flex items-center gap-2 font-medium">
+            <PairAssetIcon
+              symbol={pair.symbol}
+              name={meta?.name || pair.name}
+              logoUrl={
+                pair.kind === "stock"
+                  ? meta?.logoUrl || pairLogoSrc(pair.address, undefined, pair.symbol)
+                  : undefined
+              }
+              kind={pair.kind}
+              size={20}
+            />
+            <span>
+              {pair.symbol}
+              {pair.kind === "stock" ? ` · ${meta?.name || pair.name}` : ""}
+            </span>
+          </dd>
+        </div>
         <Row label="Trade fee" value={formatBps(curveFeeBps + creatorTaxBps)} />
         <Row label="Graduation" value={graduationLabel} />
         <Row label="Supply" value={supplyLabel} />

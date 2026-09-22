@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import type { LaunchRecord } from "@/lib/types";
-import { pairSymbol } from "@/lib/contracts/addresses";
+import { usePairMeta } from "@/hooks/usePairAssets";
 import { shorten } from "@/lib/format";
 import { TokenLogo } from "./token-logo";
+import { PairAssetIcon } from "./pair-asset-icon";
 
 export function TokenCard({
   launch,
@@ -31,6 +32,7 @@ export function TokenCard({
   const ticker = symbol || "TOKEN";
   const to = href || (launch ? `/token/${launch.token}` : "/create");
   const pct = Math.round((progress ?? 0) * 100);
+  const pair = usePairMeta(launch?.pairToken);
 
   return (
     <Link href={to} className="token-tile group">
@@ -60,8 +62,25 @@ export function TokenCard({
             <div className="progress-track">
               <div className="progress-fill" style={{ width: `${pct}%` }} />
             </div>
-            <p className="mt-1.5 text-xs text-[var(--muted)]">
-              {launch ? `${pairSymbol(launch.pairToken)} · ${pct}%` : "Platform token"}
+            <p className="mt-1.5 flex items-center gap-1.5 text-xs text-[var(--muted)]">
+              {launch ? (
+                <>
+                  <PairAssetIcon
+                    symbol={pair.symbol}
+                    name={pair.name}
+                    logoUrl={pair.logoUrl}
+                    kind={pair.kind}
+                    size={14}
+                  />
+                  <span className="truncate">
+                    {pair.showAddress ? pair.symbol : pair.kind === "stock" ? `${pair.symbol} · ${pair.name}` : pair.symbol}
+                    {" · "}
+                    {pct}%
+                  </span>
+                </>
+              ) : (
+                "Platform token"
+              )}
             </p>
           </div>
         </div>

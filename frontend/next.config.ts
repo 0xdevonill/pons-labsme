@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "dweb.link" },
       { protocol: "https", hostname: "nftstorage.link" },
       { protocol: "https", hostname: "arweave.net" },
+      { protocol: "https", hostname: "cdn.robinhood.com" },
+      { protocol: "https", hostname: "api.robinhood.com" },
     ],
   },
 };

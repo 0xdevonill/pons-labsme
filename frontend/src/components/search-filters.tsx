@@ -8,10 +8,24 @@ import { TokenCard } from "./token-card";
 import { PinnedFonsCard } from "./pinned-fons-card";
 import { isAddressLike } from "@/lib/format";
 import { pairInfo, pairSymbol } from "@/lib/contracts/addresses";
+import { looksLikeAddress } from "@/lib/pair-assets";
+import { usePairAssets } from "@/hooks/usePairAssets";
 import { useLaunchMeta } from "@/hooks/useLaunchMeta";
 import { FONS_TOKEN_ADDRESS } from "@/lib/brand";
 
 const PAGE_SIZE = 24;
+
+function catalogPairSymbol(
+  address: LaunchRecord["pairToken"],
+  catalog?: { byAddress: Map<string, { symbol: string }>; bySymbol: Map<string, { symbol: string }> },
+) {
+  const info = pairInfo(address);
+  const meta =
+    catalog?.byAddress.get(address.toLowerCase()) ??
+    (!looksLikeAddress(info.symbol) ? catalog?.bySymbol.get(info.symbol.toUpperCase()) : undefined);
+  if (info.kind === "stock" || meta) return meta?.symbol || info.symbol;
+  return pairSymbol(address);
+}
 
 export function SearchFilters({
   launches,
@@ -24,11 +38,12 @@ export function SearchFilters({
   const [generation, setGeneration] = useState<"all" | "v1" | "v2">("all");
   const [pair, setPair] = useState("all");
   const [page, setPage] = useState(0);
+  const catalog = usePairAssets();
 
   const pairs = useMemo(() => {
-    const set = new Set(launches.map((l) => pairSymbol(l.pairToken)));
+    const set = new Set(launches.map((l) => catalogPairSymbol(l.pairToken, catalog.data)));
     return ["all", "stocks", ...[...set].sort()];
-  }, [launches]);
+  }, [launches, catalog.data]);
 
   const filtered = useMemo(() => {
     const query = q.trim().toLowerCase();
@@ -37,8 +52,10 @@ export function SearchFilters({
       if (fons && launch.token.toLowerCase() === fons) return false;
       if (generation !== "all" && launch.generation !== generation) return false;
       if (pair === "stocks") {
-        if (pairInfo(launch.pairToken).kind !== "stock") return false;
-      } else if (pair !== "all" && pairSymbol(launch.pairToken) !== pair) {
+        const info = pairInfo(launch.pairToken);
+        const listed = catalog.data?.byAddress.has(launch.pairToken.toLowerCase());
+        if (info.kind !== "stock" && !listed) return false;
+      } else if (pair !== "all" && catalogPairSymbol(launch.pairToken, catalog.data) !== pair) {
         return false;
       }
       if (!query) return true;
@@ -46,7 +63,7 @@ export function SearchFilters({
       const hay = `${launch.token} ${launch.deployer}`.toLowerCase();
       return hay.includes(query);
     });
-  }, [launches, generation, pair, q]);
+  }, [launches, generation, pair, q, catalog.data]);
 
   useEffect(() => {
     setPage(0);
@@ -78,13 +95,13 @@ export function SearchFilters({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search tokens"
-            className="field h-12 pl-11 shadow-sm"
+            className="h-12 w-full rounded-full border border-transparent bg-[var(--panel)] pl-11 pr-4 text-sm shadow-sm outline-none focus:border-[color-mix(in_srgb,var(--lime)_70%,#111)] focus:shadow-[0_0_0_4px_var(--glow)]"
           />
         </label>
         <select
           value={generation}
           onChange={(e) => setGeneration(e.target.value as "all" | "v1" | "v2")}
-          className="field h-12 w-auto min-w-28 shadow-sm"
+          className="h-12 min-w-28 rounded-full border border-transparent bg-[var(--panel)] px-4 text-sm shadow-sm outline-none"
         >
           <option value="all">All</option>
           <option value="v2">V2</option>
@@ -93,7 +110,7 @@ export function SearchFilters({
         <select
           value={pair}
           onChange={(e) => setPair(e.target.value)}
-          className="field h-12 w-auto min-w-32 shadow-sm"
+          className="h-12 min-w-32 rounded-full border border-transparent bg-[var(--panel)] px-4 text-sm shadow-sm outline-none"
         >
           {pairs.map((item) => (
             <option key={item} value={item}>
