@@ -133,6 +133,7 @@ textarea {
   border: 1px solid transparent;
   padding: 0 1rem;
   outline: none;
+  box-sizing: border-box;
 }
 
 .dark .field {

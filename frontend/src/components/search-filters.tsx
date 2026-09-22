@@ -78,13 +78,13 @@ export function SearchFilters({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search tokens"
-            className="field h-12 pl-11 shadow-sm"
+            className="h-12 w-full rounded-full border border-transparent bg-[var(--panel)] pl-11 pr-4 text-sm shadow-sm outline-none focus:border-[color-mix(in_srgb,var(--lime)_70%,#111)] focus:shadow-[0_0_0_4px_var(--glow)]"
           />
         </label>
         <select
           value={generation}
           onChange={(e) => setGeneration(e.target.value as "all" | "v1" | "v2")}
-          className="field h-12 w-auto min-w-28 shadow-sm"
+          className="h-12 min-w-28 rounded-full border border-transparent bg-[var(--panel)] px-4 text-sm shadow-sm outline-none"
         >
           <option value="all">All</option>
           <option value="v2">V2</option>
@@ -93,7 +93,7 @@ export function SearchFilters({
         <select
           value={pair}
           onChange={(e) => setPair(e.target.value)}
-          className="field h-12 w-auto min-w-32 shadow-sm"
+          className="h-12 min-w-32 rounded-full border border-transparent bg-[var(--panel)] px-4 text-sm shadow-sm outline-none"
         >
           {pairs.map((item) => (
             <option key={item} value={item}>
