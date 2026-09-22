@@ -52,13 +52,16 @@ export async function GET() {
   for (const token of KNOWN_PAIR_TOKENS) {
     if (token.kind !== "stock" || token.address === ZERO_ADDRESS) continue;
     const key = token.address.toLowerCase();
-    if (!byAddress.has(key)) {
+    const existing = byAddress.get(key);
+    if (!existing) {
       byAddress.set(key, {
         symbol: token.symbol,
         name: token.name,
         logoUrl: robinhoodLogoUrl(token.address),
         address: token.address,
       });
+    } else if (existing.name === existing.symbol && token.name !== token.symbol) {
+      existing.name = token.name;
     }
   }
 
