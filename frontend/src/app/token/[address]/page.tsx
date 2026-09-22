@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAccount, useWriteContract } from "wagmi";
 import { isAddress, type Address } from "viem";
 import { useState } from "react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 import { useTokenDetail } from "@/hooks/useTokenDetail";
 import { BondingCurveProgress } from "@/components/bonding-curve";
 import { GraduationBadge } from "@/components/graduation-badge";
@@ -27,7 +28,7 @@ export default function TokenPage({ params }: { params: Promise<{ address: strin
   if (!token) return <p>Invalid token address.</p>;
   if (detail.isLoading) return <div className="glass shimmer h-96 rounded-[32px]" />;
   if (detail.error || !detail.data) {
-    return <p className="text-[var(--muted)]">{detail.error?.message || "Token not found on the live launch factories."}</p>;
+    return <p className="text-[var(--muted)]">{detail.error?.message || "Token not found on Fons."}</p>;
   }
 
   const data = detail.data;
@@ -38,28 +39,49 @@ export default function TokenPage({ params }: { params: Promise<{ address: strin
 
   return (
     <div className="space-y-6">
-      <div className="glass flex flex-col gap-5 rounded-[32px] p-5 md:flex-row">
+      <Link href="/" className="btn-secondary h-10 px-4 text-sm">
+        <ArrowLeft size={15} />
+        Back to explore
+      </Link>
+      <div className="surface flex flex-col gap-5 rounded-[32px] p-5 md:flex-row md:p-7">
         <TokenLogo src={data.imageSrc} uri={data.meta.logo} alt={data.meta.name} size="lg" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-[family-name:var(--font-display)] text-3xl tracking-tight">{data.meta.name}</h1>
             <GraduationBadge phase={data.phase} graduated={data.graduated} />
-            <span className="rounded-full bg-white/10 px-3 py-1 text-xs uppercase">{data.generation}</span>
+            <span className="chip uppercase">{data.generation}</span>
           </div>
-          <p className="text-[var(--muted)]">
+          <p className="mt-1 text-[var(--muted)]">
             ${data.meta.symbol} · {pairSymbol(pair)} · {shorten(token)}
           </p>
-          <p className="mt-3 max-w-2xl text-sm">{data.meta.description}</p>
-          <div className="mt-4 flex flex-wrap gap-3 text-sm">
-            <a href={explorerToken(token)} target="_blank" rel="noreferrer" className="underline">
-              Explorer
+          <p className="mt-3 max-w-2xl text-sm leading-6">{data.meta.description}</p>
+          <div className="mt-4 flex flex-wrap gap-2 text-sm">
+            <a href={explorerToken(token)} target="_blank" rel="noreferrer" className="chip inline-flex items-center gap-1.5 hover:text-[var(--ink)]">
+              Explorer <ExternalLink size={12} />
             </a>
-            <a href={explorerAddress((launch as V1Launch | V2Launch).deployer)} target="_blank" rel="noreferrer">
+            <a
+              href={explorerAddress((launch as V1Launch | V2Launch).deployer)}
+              target="_blank"
+              rel="noreferrer"
+              className="chip hover:text-[var(--ink)]"
+            >
               Creator {shorten((launch as V1Launch | V2Launch).deployer)}
             </a>
-            {data.meta.socials.twitter ? <a href={data.meta.socials.twitter}>X</a> : null}
-            {data.meta.socials.telegram ? <a href={data.meta.socials.telegram}>Telegram</a> : null}
-            {data.meta.socials.website ? <a href={data.meta.socials.website}>Site</a> : null}
+            {data.meta.socials.twitter ? (
+              <a href={data.meta.socials.twitter} className="chip hover:text-[var(--ink)]">
+                X
+              </a>
+            ) : null}
+            {data.meta.socials.telegram ? (
+              <a href={data.meta.socials.telegram} className="chip hover:text-[var(--ink)]">
+                Telegram
+              </a>
+            ) : null}
+            {data.meta.socials.website ? (
+              <a href={data.meta.socials.website} className="chip hover:text-[var(--ink)]">
+                Site
+              </a>
+            ) : null}
           </div>
         </div>
       </div>
@@ -89,7 +111,7 @@ export default function TokenPage({ params }: { params: Promise<{ address: strin
           graduated={data.graduated || data.phase === 2}
           readyToGraduate={data.readyToGraduate}
         />
-        <section className="glass space-y-3 rounded-3xl p-5 text-sm">
+        <section className="surface space-y-3 rounded-[28px] p-5 text-sm">
           <h3 className="font-[family-name:var(--font-display)] text-lg">Market details</h3>
           <Row label="Quote asset" value={pairSymbol(pair)} />
           <Row label="Trade fee" value={formatBps(data.feeBps)} />
@@ -112,7 +134,7 @@ export default function TokenPage({ params }: { params: Promise<{ address: strin
                   .then(() => setNote("Graduation seed submitted."))
                   .catch((error) => setNote(error instanceof Error ? error.message : "Failed"))
               }
-              className="h-11 w-full rounded-2xl bg-[#d4af67] font-semibold text-[#2a2108]"
+              className="h-11 w-full rounded-full bg-[#d4af67] font-semibold text-[#2a2108] shadow-sm hover:brightness-105 disabled:opacity-50"
             >
               Complete graduation
             </button>
@@ -125,18 +147,15 @@ export default function TokenPage({ params }: { params: Promise<{ address: strin
       </div>
 
       <TxHistory curve={data.generation === "v2" ? (launch as V2Launch).curve : undefined} pairToken={pair} />
-      <p className="text-xs text-[var(--muted)]">
-        <Link href="/explore">Back to explore</Link>
-      </p>
     </div>
   );
 }
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-3">
+    <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] py-2 last:border-b-0">
       <span className="text-[var(--muted)]">{label}</span>
-      <span className="min-w-0 truncate text-right">{value}</span>
+      <span className="min-w-0 truncate text-right font-medium">{value}</span>
     </div>
   );
 }

@@ -33,32 +33,37 @@ export function TokenCard({
   const pct = Math.round((progress ?? 0) * 100);
 
   return (
-    <Link href={to} className="group block">
-      <article className="overflow-hidden">
-        <div className="relative aspect-square overflow-hidden rounded-[22px] bg-[#ececec]">
+    <Link href={to} className="token-tile group">
+      <article>
+        <div className="relative aspect-square overflow-hidden rounded-[22px] bg-[#ececec] dark:bg-white/5">
           <TokenLogo src={image} uri={logo} alt={name || symbol || "Token"} size="xl" className="h-full w-full rounded-[22px]" />
-          <div className="absolute left-2 top-2 flex gap-1">
+          <div className="absolute left-2 top-2 flex flex-wrap gap-1">
             {pinned ? (
-              <span className="rounded-full bg-black/75 px-2 py-0.5 text-[10px] font-medium text-white">Pinned</span>
+              <span className="rounded-full bg-black/80 px-2 py-0.5 text-[10px] font-medium text-white">Pinned</span>
             ) : null}
             {phaseLabel ? (
-              <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-medium text-black">
+              <span className="rounded-full bg-white/92 px-2 py-0.5 text-[10px] font-medium text-black shadow-sm">
                 {phaseLabel}
               </span>
             ) : null}
             {launch?.generation ? (
-              <span className="rounded-full bg-[#d6ff3a] px-2 py-0.5 text-[10px] font-semibold uppercase text-black">
+              <span className="rounded-full bg-[var(--lime)] px-2 py-0.5 text-[10px] font-semibold uppercase text-black">
                 {launch.generation}
               </span>
             ) : null}
           </div>
         </div>
-        <div className="mt-2.5 min-w-0">
+        <div className="mt-2.5 min-w-0 px-0.5">
           <h3 className="truncate text-sm font-semibold">{title}</h3>
           <p className="truncate text-xs text-[var(--muted)]">${ticker}</p>
-          <p className="mt-1 text-xs text-[var(--muted)]">
-            {launch ? `${pairSymbol(launch.pairToken)} · ${pct}%` : "Platform token"}
-          </p>
+          <div className="mt-2">
+            <div className="progress-track">
+              <div className="progress-fill" style={{ width: `${pct}%` }} />
+            </div>
+            <p className="mt-1.5 text-xs text-[var(--muted)]">
+              {launch ? `${pairSymbol(launch.pairToken)} · ${pct}%` : "Platform token"}
+            </p>
+          </div>
         </div>
       </article>
     </Link>

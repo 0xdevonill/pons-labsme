@@ -6,10 +6,10 @@ export function GraduationBadge({ phase, graduated }: { phase: GraduationPhase; 
   return (
     <span
       className={cn(
-        "rounded-full px-3 py-1 text-xs",
-        phase === 2 || graduated ? "bg-[#5eead4]/20 text-[#147a4e]" : "bg-white/10",
-        phase === 1 && "bg-amber-400/20",
-        phase === 3 && "bg-rose-400/20",
+        "rounded-full px-3 py-1 text-xs font-semibold",
+        phase === 2 || graduated ? "bg-[#5eead4]/20 text-[#147a4e]" : "bg-[color-mix(in_srgb,var(--ink)_6%,transparent)]",
+        phase === 1 && "bg-amber-400/20 text-amber-800 dark:text-amber-200",
+        phase === 3 && "bg-rose-400/20 text-rose-700 dark:text-rose-200",
       )}
     >
       {label}
