@@ -4,7 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Address } from "viem";
 import { KNOWN_PAIR_TOKENS, ZERO_ADDRESS, pairInfo } from "@/lib/contracts/addresses";
 import { formatAmount } from "@/lib/format";
+import { looksLikeAddress, pairLogoSrc } from "@/lib/pair-assets";
 import { cn } from "@/lib/cn";
+import { usePairAssets } from "@/hooks/usePairAssets";
+import { PairAssetIcon } from "./pair-asset-icon";
 
 type PairOption = {
   symbol: string;
@@ -14,6 +17,7 @@ type PairOption = {
   kind: string;
   approved?: boolean;
   graduationThreshold?: bigint;
+  logoUrl?: string;
 };
 
 export function PairAssetPicker({
@@ -28,7 +32,11 @@ export function PairAssetPicker({
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
+  const catalog = usePairAssets();
   const selected = pairInfo(value);
+  const selectedMeta =
+    catalog.data?.byAddress.get(selected.address.toLowerCase()) ??
+    catalog.data?.bySymbol.get(selected.symbol.toUpperCase());
 
   useEffect(() => {
     if (!open) return;
@@ -48,10 +56,19 @@ export function PairAssetPicker({
 
   const options = useMemo(() => {
     const live = new Map(pairs.map((pair) => [pair.address.toLowerCase(), pair]));
+    const byAddress = catalog.data?.byAddress;
+    const bySymbol = catalog.data?.bySymbol;
     return KNOWN_PAIR_TOKENS.map((token) => {
       const extra = live.get(token.address.toLowerCase());
+      const meta =
+        byAddress?.get(token.address.toLowerCase()) ?? bySymbol?.get(token.symbol.toUpperCase());
       return {
         ...token,
+        name: token.kind === "stock" ? meta?.name || token.name : token.name,
+        logoUrl:
+          token.kind === "stock"
+            ? meta?.logoUrl || pairLogoSrc(token.address, undefined, token.symbol)
+            : undefined,
         approved: token.address === ZERO_ADDRESS ? true : Boolean(extra?.approved),
         graduationThreshold: extra?.graduationThreshold ?? 0n,
       };
@@ -60,7 +77,7 @@ export function PairAssetPicker({
       if (!query) return true;
       return `${token.symbol} ${token.name}`.toLowerCase().includes(query);
     });
-  }, [pairs, q]);
+  }, [pairs, q, catalog.data]);
 
   return (
     <div className="relative" ref={rootRef}>
@@ -68,11 +85,25 @@ export function PairAssetPicker({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="field flex h-12 items-center justify-between px-3 text-left shadow-sm"
+        className="field flex h-14 items-center justify-between px-3 text-left shadow-sm"
       >
-        <span className="flex items-center gap-2">
-          <PairDot symbol={selected.symbol} />
-          <span className="font-medium">{selected.symbol}</span>
+        <span className="flex min-w-0 items-center gap-3">
+          <PairAssetIcon
+            symbol={selected.symbol}
+            name={selectedMeta?.name || selected.name}
+            logoUrl={
+              selected.kind === "stock"
+                ? selectedMeta?.logoUrl || pairLogoSrc(selected.address, undefined, selected.symbol)
+                : undefined
+            }
+            kind={selected.kind}
+          />
+          <span className="min-w-0">
+            <span className="block font-medium leading-5">{selected.symbol}</span>
+            <span className="block truncate text-xs text-[var(--muted)]">
+              {selected.kind === "stock" ? selectedMeta?.name || selected.name : selected.name}
+            </span>
+          </span>
         </span>
         <span className="text-[var(--muted)]">▾</span>
       </button>
@@ -96,15 +127,29 @@ export function PairAssetPicker({
                   setQ("");
                 }}
                 className={cn(
-                  "flex w-full items-center justify-between px-3 py-2.5 text-left text-sm hover:bg-black/5 disabled:opacity-40",
+                  "flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left text-sm hover:bg-black/5 disabled:opacity-40",
                   option.address.toLowerCase() === value.toLowerCase() && "bg-black/5",
                 )}
               >
-                <span className="flex items-center gap-2">
-                  <PairDot symbol={option.symbol} />
-                  <span className="font-medium">{option.symbol}</span>
+                <span className="flex min-w-0 items-center gap-3">
+                  <PairAssetIcon
+                    symbol={option.symbol}
+                    name={option.name}
+                    logoUrl={option.logoUrl}
+                    kind={option.kind}
+                  />
+                  <span className="min-w-0">
+                    <span className="block font-medium leading-5">{option.symbol}</span>
+                    <span className="block truncate text-xs text-[var(--muted)]">{option.name}</span>
+                  </span>
                 </span>
-                <span className="text-[var(--muted)]">{option.name}</span>
+                {option.kind === "stock" ? (
+                  <span className="shrink-0 text-[11px] text-[var(--muted)]">Stock</span>
+                ) : looksLikeAddress(option.symbol) ? (
+                  <span className="shrink-0 font-[family-name:var(--font-mono)] text-[11px] text-[var(--muted)]">
+                    {option.address.slice(0, 6)}…{option.address.slice(-4)}
+                  </span>
+                ) : null}
               </button>
             ))}
           </div>
@@ -126,25 +171,5 @@ function GraduationHint({ address, pairs }: { address: Address; pairs: PairOptio
     <p className="mt-1 text-xs text-[var(--muted)]">
       Graduates once the curve raises {formatAmount(threshold, info.decimals, 4)} {info.symbol}.
     </p>
-  );
-}
-
-function PairDot({ symbol }: { symbol: string }) {
-  const colors: Record<string, string> = {
-    ETH: "bg-[#627eea]",
-    NVDA: "bg-[#76b900]",
-    TSLA: "bg-[#e31937]",
-    AAPL: "bg-[#111]",
-    GOOGL: "bg-[#4285f4]",
-    GME: "bg-[#111]",
-    SPCX: "bg-[#111]",
-    USDG: "bg-[#2e7d32]",
-    cbBTC: "bg-[#f7931a]",
-    SPY: "bg-[#1e3a8a]",
-  };
-  return (
-    <span className={cn("grid h-6 w-6 place-items-center rounded-full text-[10px] font-bold text-white", colors[symbol] || "bg-[#444]")}>
-      {symbol.slice(0, 1)}
-    </span>
   );
 }

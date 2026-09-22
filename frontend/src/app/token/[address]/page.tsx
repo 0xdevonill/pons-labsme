@@ -12,7 +12,9 @@ import { GraduationBadge } from "@/components/graduation-badge";
 import { TradePanel } from "@/components/trade-panel";
 import { TxHistory } from "@/components/tx-history";
 import { TokenLogo } from "@/components/token-logo";
-import { explorerAddress, explorerToken, pairDecimals, pairSymbol, V2_FACTORY } from "@/lib/contracts/addresses";
+import { explorerAddress, explorerToken, pairDecimals, V2_FACTORY } from "@/lib/contracts/addresses";
+import { PairAssetIcon } from "@/components/pair-asset-icon";
+import { usePairMeta } from "@/hooks/usePairAssets";
 import { v2FactoryAbi } from "@/lib/contracts/abis";
 import { formatAmount, formatBps, shorten } from "@/lib/format";
 import { PHASE_LABEL, type V1Launch, type V2Launch } from "@/lib/types";
@@ -24,6 +26,13 @@ export default function TokenPage({ params }: { params: Promise<{ address: strin
   const { address: wallet } = useAccount();
   const { writeContractAsync, isPending } = useWriteContract();
   const [note, setNote] = useState("");
+  const launch = detail.data?.launch as V1Launch | V2Launch | undefined;
+  const pairAddress = launch
+    ? detail.data?.generation === "v2"
+      ? (launch as V2Launch).pairToken
+      : (launch as V1Launch).pairedToken
+    : undefined;
+  const quote = usePairMeta(pairAddress);
 
   if (!token) return <p>Invalid token address.</p>;
   if (detail.isLoading) return <div className="glass shimmer h-96 rounded-[32px]" />;
@@ -32,10 +41,9 @@ export default function TokenPage({ params }: { params: Promise<{ address: strin
   }
 
   const data = detail.data;
-  const launch = data.launch as V1Launch | V2Launch;
   const threshold =
     data.generation === "v2" ? (launch as V2Launch).graduationThreshold : (data.threshold ?? 0n);
-  const pair = data.generation === "v2" ? (launch as V2Launch).pairToken : (launch as V1Launch).pairedToken;
+  const pair = pairAddress as Address;
 
   return (
     <div className="space-y-6">
@@ -51,8 +59,21 @@ export default function TokenPage({ params }: { params: Promise<{ address: strin
             <GraduationBadge phase={data.phase} graduated={data.graduated} />
             <span className="chip uppercase">{data.generation}</span>
           </div>
-          <p className="mt-1 text-[var(--muted)]">
-            ${data.meta.symbol} · {pairSymbol(pair)} · {shorten(token)}
+          <p className="mt-1 flex flex-wrap items-center gap-2 text-[var(--muted)]">
+            <span>${data.meta.symbol}</span>
+            <span>·</span>
+            <span className="inline-flex items-center gap-1.5">
+              <PairAssetIcon
+                symbol={quote.symbol}
+                name={quote.name}
+                logoUrl={quote.logoUrl}
+                kind={quote.kind}
+                size={16}
+              />
+              {quote.showAddress ? quote.symbol : quote.kind === "stock" ? `${quote.symbol} · ${quote.name}` : quote.symbol}
+            </span>
+            <span>·</span>
+            <span>{shorten(token)}</span>
           </p>
           <p className="mt-3 max-w-2xl text-sm leading-6">{data.meta.description}</p>
           <div className="mt-4 flex flex-wrap gap-2 text-sm">
@@ -113,7 +134,19 @@ export default function TokenPage({ params }: { params: Promise<{ address: strin
         />
         <section className="surface space-y-3 rounded-[28px] p-5 text-sm">
           <h3 className="font-[family-name:var(--font-display)] text-lg">Market details</h3>
-          <Row label="Quote asset" value={pairSymbol(pair)} />
+          <div className="flex items-center justify-between gap-3 border-b border-[var(--line)] py-2">
+            <span className="text-[var(--muted)]">Quote asset</span>
+            <span className="inline-flex min-w-0 items-center gap-1.5 truncate font-medium">
+              <PairAssetIcon
+                symbol={quote.symbol}
+                name={quote.name}
+                logoUrl={quote.logoUrl}
+                kind={quote.kind}
+                size={16}
+              />
+              {quote.showAddress ? quote.symbol : quote.kind === "stock" ? `${quote.symbol} · ${quote.name}` : quote.symbol}
+            </span>
+          </div>
           <Row label="Trade fee" value={formatBps(data.feeBps)} />
           <Row label="Creator commission" value={formatBps(data.creatorTaxBps)} />
           {data.generation === "v2" ? (

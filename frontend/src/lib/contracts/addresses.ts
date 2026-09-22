@@ -58,7 +58,7 @@ export function pairInfo(address: Address | undefined) {
       name: "Unknown",
       address,
       decimals: 18,
-      kind: "crypto" as const,
+      kind: "unknown" as const,
     }
   );
 }
