@@ -30,12 +30,12 @@ export const FONS_FEE_RECIPIENT = (
 export const FONS_TOKEN_ADDRESS = (
   process.env.NEXT_PUBLIC_FONS_TOKEN && isAddress(process.env.NEXT_PUBLIC_FONS_TOKEN)
     ? process.env.NEXT_PUBLIC_FONS_TOKEN
-    : ""
-) as Address | "";
+    : "0x43873E24CDeF7724F8F2f524C3aeECaAAe4FcC8A"
+) as Address;
 
 export const PINNED_TOKEN = {
   name: "Fons",
   symbol: "FONS",
-  description: "The Fons platform token. It stays pinned at the top of the market. Add the contract address after launch.",
+  description: "The Fons platform token. It stays pinned at the top of the market.",
   logo: "/logo.png",
 };
