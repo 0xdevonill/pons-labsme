@@ -3,7 +3,7 @@
 import { pairInfo } from "@/lib/contracts/addresses";
 import type { Address } from "viem";
 import { formatBps } from "@/lib/format";
-import { pairLogoSrc } from "@/lib/pair-assets";
+import { hostedPairLogo, pairLogoSrc } from "@/lib/pair-assets";
 import { TokenLogo } from "./token-logo";
 import { PairAssetIcon } from "./pair-asset-icon";
 import { usePairAssets } from "@/hooks/usePairAssets";
@@ -63,7 +63,7 @@ export function TokenPreview({
               symbol={pair.symbol}
               name={meta?.name || pair.name}
               logoUrl={
-                pair.kind === "stock"
+                pair.kind === "stock" || hostedPairLogo(pair.symbol)
                   ? meta?.logoUrl || pairLogoSrc(pair.address, undefined, pair.symbol)
                   : undefined
               }

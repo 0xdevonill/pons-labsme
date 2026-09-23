@@ -14,7 +14,6 @@ export function PairAssetIcon({
   symbol,
   name,
   logoUrl,
-  kind,
   size = 28,
 }: {
   symbol: string;
@@ -24,7 +23,7 @@ export function PairAssetIcon({
   size?: number;
 }) {
   const [failed, setFailed] = useState(false);
-  const showLogo = Boolean(logoUrl) && !failed && kind !== "native";
+  const showLogo = Boolean(logoUrl) && !failed;
 
   if (showLogo && logoUrl) {
     return (

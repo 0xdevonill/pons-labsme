@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ROBINHOOD_CHAIN_ID } from "@/lib/chain";
-import { KNOWN_PAIR_TOKENS, ZERO_ADDRESS } from "@/lib/contracts/addresses";
-import { cleanPairName, robinhoodLogoUrl, type PairAssetMeta } from "@/lib/pair-assets";
+import { KNOWN_PAIR_TOKENS } from "@/lib/contracts/addresses";
+import { cleanPairName, hostedPairLogo, robinhoodLogoUrl, type PairAssetMeta } from "@/lib/pair-assets";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,16 +50,19 @@ export async function GET() {
   }
 
   for (const token of KNOWN_PAIR_TOKENS) {
-    if (token.kind !== "stock" || token.address === ZERO_ADDRESS) continue;
+    const hosted = hostedPairLogo(token.symbol);
+    if (token.kind !== "stock" && !hosted) continue;
     const key = token.address.toLowerCase();
     const existing = byAddress.get(key);
     if (!existing) {
       byAddress.set(key, {
         symbol: token.symbol,
         name: token.name,
-        logoUrl: robinhoodLogoUrl(token.address),
+        logoUrl: hosted || robinhoodLogoUrl(token.address),
         address: token.address,
       });
+    } else if (hosted) {
+      existing.logoUrl = hosted;
     } else if (existing.name === existing.symbol && token.name !== token.symbol) {
       existing.name = token.name;
     }
