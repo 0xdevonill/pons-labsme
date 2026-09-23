@@ -3,7 +3,7 @@
 import type { Address } from "viem";
 import { useQuery } from "@tanstack/react-query";
 import { pairInfo } from "@/lib/contracts/addresses";
-import { looksLikeAddress, pairDisplayName, pairLogoSrc, type PairAssetMeta } from "@/lib/pair-assets";
+import { hostedPairLogo, looksLikeAddress, pairDisplayName, pairLogoSrc, type PairAssetMeta } from "@/lib/pair-assets";
 
 export function usePairAssets() {
   return useQuery({
@@ -41,7 +41,9 @@ export function usePairMeta(address?: Address) {
     kind,
   });
   const logoUrl =
-    kind === "stock" ? meta?.logoUrl || pairLogoSrc(known.address, undefined, symbol) : undefined;
+    kind === "stock" || hostedPairLogo(symbol)
+      ? meta?.logoUrl || pairLogoSrc(known.address, undefined, symbol)
+      : undefined;
   return {
     ...known,
     symbol,

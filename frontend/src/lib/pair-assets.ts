@@ -12,7 +12,22 @@ export function robinhoodLogoUrl(address: string) {
   return `${ROBINHOOD_LOGO_CDN}/${address.toLowerCase()}.png`;
 }
 
+/** Hosted 128×128 pair marks for the non-stock quote assets. */
+export const HOSTED_PAIR_LOGOS: Record<string, string> = {
+  ETH: "/pair-logos/ETH.png",
+  USDG: "/pair-logos/USDG.png",
+  CBBTC: "/pair-logos/cbBTC.png",
+  WETH: "/pair-logos/WETH.png",
+};
+
+export function hostedPairLogo(symbol?: string) {
+  if (!symbol) return "";
+  return HOSTED_PAIR_LOGOS[symbol.toUpperCase()] ?? "";
+}
+
 export function pairLogoSrc(address?: string, remoteUrl?: string, symbol?: string) {
+  const hosted = hostedPairLogo(symbol);
+  if (hosted) return hosted;
   const params = new URLSearchParams();
   if (address) params.set("address", address);
   if (symbol && !symbol.startsWith("0x") && !symbol.includes("…")) params.set("symbol", symbol);

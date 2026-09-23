@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { Address } from "viem";
 import { KNOWN_PAIR_TOKENS, ZERO_ADDRESS, pairInfo } from "@/lib/contracts/addresses";
 import { formatAmount } from "@/lib/format";
-import { looksLikeAddress, pairLogoSrc } from "@/lib/pair-assets";
+import { hostedPairLogo, looksLikeAddress, pairLogoSrc } from "@/lib/pair-assets";
 import { cn } from "@/lib/cn";
 import { usePairAssets } from "@/hooks/usePairAssets";
 import { PairAssetIcon } from "./pair-asset-icon";
@@ -66,7 +66,7 @@ export function PairAssetPicker({
         ...token,
         name: token.kind === "stock" ? meta?.name || token.name : token.name,
         logoUrl:
-          token.kind === "stock"
+          token.kind === "stock" || hostedPairLogo(token.symbol)
             ? meta?.logoUrl || pairLogoSrc(token.address, undefined, token.symbol)
             : undefined,
         approved: token.address === ZERO_ADDRESS ? true : Boolean(extra?.approved),
@@ -92,7 +92,7 @@ export function PairAssetPicker({
             symbol={selected.symbol}
             name={selectedMeta?.name || selected.name}
             logoUrl={
-              selected.kind === "stock"
+              selected.kind === "stock" || hostedPairLogo(selected.symbol)
                 ? selectedMeta?.logoUrl || pairLogoSrc(selected.address, undefined, selected.symbol)
                 : undefined
             }
